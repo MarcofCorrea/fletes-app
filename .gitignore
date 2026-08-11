@@ -1,0 +1,4 @@
+fletes.db
+*.db
+__pycache__/
+venv/
