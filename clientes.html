@@ -390,12 +390,22 @@
         async function cargarMisMudanzas() {
             try {
                 const [resM, resO, resF] = await Promise.all([
-                    fetch(`${API_URL}/cliente/${clienteIdActual}/mudanzas`),
+                    fetch(`${API_URL}/mudanzas/cliente/${clienteIdActual}`),
                     fetch(`${API_URL}/ofertas/`),
                     fetch(`${API_URL}/fleteros/`)
                 ]);
-                const data = await resM.json();
-                const todasOfertas = await resO.json();
+                
+                let rawData = [];
+                if (resM.ok) {
+                    rawData = await resM.json();
+                }
+
+                // Blindaje robusto: garantizamos que sea un array y manejamos posibles objetos anidados
+                if (!Array.isArray(rawData)) {
+                    rawData = rawData.mudanzas || rawData.results || [];
+                }
+
+                const todasOfertas = await resO.json().catch(() => []);
                 const listaFleteros = await resF.json().catch(() => []);
                 
                 const contenedorSolicitudes = document.getElementById("listaMisMudanzas");
@@ -406,7 +416,12 @@
 
                 const eliminadas = JSON.parse(localStorage.getItem(`cliente_eliminadas_${clienteIdActual}`) || "[]");
                 const finalizadasLocal = JSON.parse(localStorage.getItem(`mudanzas_finalizadas`) || "[]");
-                const mudanzasValidas = data ? data.filter(item => !eliminadas.includes(item.mudanza.id)) : [];
+                
+                // Mapeo seguro si el backend devuelve un array plano de mudanzas o un array de objetos {mudanza, ofertas}
+                const mudanzasValidas = rawData.filter(item => {
+                    const idM = item.mudanza ? item.mudanza.id : item.id;
+                    return !eliminadas.includes(idM);
+                });
 
                 if (!mudanzasValidas || mudanzasValidas.length === 0) {
                     if (contenedorSolicitudes) contenedorSolicitudes.innerHTML = `<p class="text-sm text-slate-500 text-center py-4">Aún no has publicado ninguna mudanza.</p>`;
@@ -418,8 +433,8 @@
                 let tieneOfertasGlobal = false;
 
                 for (const item of mudanzasValidas) {
-                    const m = item.mudanza;
-                    const ofertas = item.ofertas;
+                    const m = item.mudanza || item;
+                    const ofertas = item.ofertas || todasOfertas.filter(o => o.mudanza_id == m.id);
                     const estaFinalizada = finalizadasLocal.includes(m.id) || m.estado === 'finalizada';
 
                     let infoFechaHora = "";
