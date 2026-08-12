@@ -25,11 +25,12 @@ try:
 except Exception:
     pass
 
-# Se añade redirect_slashes=False para evitar errores 404 o redirecciones automáticas fallidas en POST/GET
+# Se configura strict_slashes=False para que FastAPI ignore si la URL termina en barra o no
 app = FastAPI(
     title="FletesApp API",
     version="1.0.0",
-    redirect_slashes=False
+    redirect_slashes=False,
+    strict_slashes=False
 )
 
 # Bloque opcional de diagnóstico para visualizar todas las rutas registradas en el inicio de la app
