@@ -165,7 +165,7 @@
             ? "http://127.0.0.1:8000" 
             : "https://fletes-app.onrender.com";
 
-        let fleteroIdActual = parseInt(sessionStorage.getItem("fleteroId")) || 1;
+        let fleteroIdActual = sessionStorage.getItem("fleteroId") ? parseInt(sessionStorage.getItem("fleteroId")) : null;
 
         window.addEventListener("DOMContentLoaded", () => {
             window.addEventListener('storage', (e) => {
@@ -177,11 +177,13 @@
             const savedId = sessionStorage.getItem("fleteroId");
             if (savedId) {
                 fleteroIdActual = parseInt(savedId);
+                document.getElementById("pantallaAuth").style.display = "none";
+                document.getElementById("pantallaDashboard").style.display = "flex";
+                cargarDatosDashboard();
+            } else {
+                document.getElementById("pantallaAuth").style.display = "flex";
+                document.getElementById("pantallaDashboard").style.display = "none";
             }
-
-            document.getElementById("pantallaAuth").style.display = "none";
-            document.getElementById("pantallaDashboard").style.display = "flex";
-            cargarDatosDashboard();
         });
 
         async function accesoRapidoFletero() {
@@ -314,9 +316,7 @@
         async function cargarDatosDashboard() {
             try {
                 let idFleteroConsulta = parseInt(fleteroIdActual);
-                if (!idFleteroConsulta || idFleteroConsulta === 0 || isNaN(idFleteroConsulta)) {
-                    idFleteroConsulta = 1;
-                }
+                if (!idFleteroConsulta || idFleteroConsulta === 0 || isNaN(idFleteroConsulta)) return;
 
                 let mudanzasServidor = [];
                 try {
@@ -634,18 +634,14 @@
 
         function limpiarNotificaciones() {
             let idFleteroLimpiar = parseInt(fleteroIdActual);
-            if (!idFleteroLimpiar || idFleteroLimpiar === 0 || isNaN(idFleteroLimpiar)) {
-                idFleteroLimpiar = 1;
-            }
+            if (!idFleteroLimpiar || idFleteroLimpiar === 0 || isNaN(idFleteroLimpiar)) return;
             localStorage.removeItem(`notificaciones_fletero_${idFleteroLimpiar}`);
             cargarDatosDashboard();
         }
 
         async function enviarOferta(mId) {
             let idFleteroOferta = parseInt(fleteroIdActual);
-            if (!idFleteroOferta || idFleteroOferta === 0 || isNaN(idFleteroOferta)) {
-                idFleteroOferta = 1;
-            }
+            if (!idFleteroOferta || idFleteroOferta === 0 || isNaN(idFleteroOferta)) return;
 
             const montoInput = document.getElementById(`monto_${mId}`).value;
             const horaModificada = document.getElementById(`hora_${mId}`).value;
@@ -773,9 +769,7 @@
         async function aprobarTrasladoFletero(mudanzaId, ofertaId) {
             try {
                 let idFleteroAprobar = parseInt(fleteroIdActual);
-                if (!idFleteroAprobar || idFleteroAprobar === 0 || isNaN(idFleteroAprobar)) {
-                    idFleteroAprobar = 1;
-                }
+                if (!idFleteroAprobar || idFleteroAprobar === 0 || isNaN(idFleteroAprobar)) return;
 
                 const aprobadas = JSON.parse(localStorage.getItem(`fletero_aprobadas_manual_${idFleteroAprobar}`) || "[]");
                 if (!aprobadas.includes(mudanzaId)) {
@@ -817,9 +811,7 @@
 
         async function guardarPerfilFletero() {
             let idFleteroPerfil = parseInt(fleteroIdActual);
-            if (!idFleteroPerfil || idFleteroPerfil === 0 || isNaN(idFleteroPerfil)) {
-                idFleteroPerfil = 1;
-            }
+            if (!idFleteroPerfil || idFleteroPerfil === 0 || isNaN(idFleteroPerfil)) return;
 
             const dataActualizada = {
                 nombre: document.getElementById("perfilNombreInput").value,
@@ -854,9 +846,7 @@
 
         function eliminarTarjeta(mId) {
             let idFleteroEliminar = parseInt(fleteroIdActual);
-            if (!idFleteroEliminar || idFleteroEliminar === 0 || isNaN(idFleteroEliminar)) {
-                idFleteroEliminar = 1;
-            }
+            if (!idFleteroEliminar || idFleteroEliminar === 0 || isNaN(idFleteroEliminar)) return;
             const eliminadas = JSON.parse(localStorage.getItem(`fletero_sol_eliminadas_${idFleteroEliminar}`) || "[]");
             if (!eliminadas.includes(mId)) {
                 eliminadas.push(mId);
@@ -868,9 +858,7 @@
 
         function eliminarTarjetaAprobada(mId) {
             let idFleteroEliminarTras = parseInt(fleteroIdActual);
-            if (!idFleteroEliminarTras || idFleteroEliminarTras === 0 || isNaN(idFleteroEliminarTras)) {
-                idFleteroEliminarTras = 1;
-            }
+            if (!idFleteroEliminarTras || idFleteroEliminarTras === 0 || isNaN(idFleteroEliminarTras)) return;
             const eliminadas = JSON.parse(localStorage.getItem(`fletero_tras_eliminadas_${idFleteroEliminarTras}`) || "[]");
             if (!eliminadas.includes(mId)) {
                 eliminadas.push(mId);

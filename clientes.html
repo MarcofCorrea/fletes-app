@@ -171,8 +171,8 @@
             ? "http://127.0.0.1:8000" 
             : "https://fletes-app.onrender.com";
 
-        let clienteIdActual = parseInt(sessionStorage.getItem("clienteId")) || 1;
-        let datosClienteActual = JSON.parse(sessionStorage.getItem("datosCliente")) || { id: 1, nombre: "Cliente Demo", email: "cliente@demo.com", telefono: "3511234567" };
+        let clienteIdActual = sessionStorage.getItem("clienteId") ? parseInt(sessionStorage.getItem("clienteId")) : null;
+        let datosClienteActual = sessionStorage.getItem("datosCliente") ? JSON.parse(sessionStorage.getItem("datosCliente")) : null;
 
         window.addEventListener("DOMContentLoaded", async () => {
             const urlParams = new URLSearchParams(window.location.search);
@@ -198,19 +198,23 @@
 
             const savedId = sessionStorage.getItem("clienteId");
             const savedData = sessionStorage.getItem("datosCliente");
+            
             if (savedId && savedData) {
                 clienteIdActual = parseInt(savedId);
                 datosClienteActual = JSON.parse(savedData);
-            }
 
-            document.getElementById("contenedorAuth").style.display = "none";
-            document.getElementById("vistaDashboardCliente").style.display = "flex";
-            
-            if (sessionStorage.getItem("abrir_seccion_ofertas") === "true") {
-                sessionStorage.removeItem("abrir_seccion_ofertas");
-                cambiarTabDashboard('ofertas');
+                document.getElementById("contenedorAuth").style.display = "none";
+                document.getElementById("vistaDashboardCliente").style.display = "flex";
+                
+                if (sessionStorage.getItem("abrir_seccion_ofertas") === "true") {
+                    sessionStorage.removeItem("abrir_seccion_ofertas");
+                    cambiarTabDashboard('ofertas');
+                } else {
+                    cargarMisMudanzas();
+                }
             } else {
-                cargarMisMudanzas();
+                document.getElementById("contenedorAuth").style.display = "flex";
+                document.getElementById("vistaDashboardCliente").style.display = "none";
             }
         });
 
@@ -366,7 +370,8 @@
 
             let idClienteFinal = parseInt(clienteIdActual);
             if (!idClienteFinal || idClienteFinal === 0 || isNaN(idClienteFinal)) {
-                idClienteFinal = 1;
+                alert("⚠️ No hay una sesión de cliente activa. Por favor inicia sesión o regístrate.");
+                return;
             }
 
             const data = {
@@ -402,9 +407,7 @@
         async function cargarMisMudanzas() {
             try {
                 let idClienteConsulta = parseInt(clienteIdActual);
-                if (!idClienteConsulta || idClienteConsulta === 0 || isNaN(idClienteConsulta)) {
-                    idClienteConsulta = 1;
-                }
+                if (!idClienteConsulta || idClienteConsulta === 0 || isNaN(idClienteConsulta)) return;
 
                 const [resM, resO, resF] = await Promise.all([
                     fetch(`${API_URL}/mudanzas/cliente/${idClienteConsulta}`),
@@ -863,9 +866,7 @@
 
         async function guardarPerfilCliente() {
             let idClientePerfil = parseInt(clienteIdActual);
-            if (!idClientePerfil || idClientePerfil === 0 || isNaN(idClientePerfil)) {
-                idClientePerfil = 1;
-            }
+            if (!idClientePerfil || idClientePerfil === 0 || isNaN(idClientePerfil)) return;
             const nuevoNombre = document.getElementById("perfilNombreInput").value;
             const nuevoEmail = document.getElementById("perfilEmailInput").value;
             const nuevoTelefono = document.getElementById("perfilTelefonoInput").value;
