@@ -25,12 +25,20 @@ try:
 except Exception:
     pass
 
-# Se agrega redirect_slashes=False para evitar errores 405 o redirecciones automáticas fallidas en POST/GET
+# Se añade redirect_slashes=False para evitar errores 404 o redirecciones automáticas fallidas en POST/GET
 app = FastAPI(
     title="FletesApp API",
     version="1.0.0",
-    
+    redirect_slashes=False
 )
+
+# Bloque opcional de diagnóstico para visualizar todas las rutas registradas en el inicio de la app
+@app.on_event("startup")
+def mostrar_rutas():
+    print("--- RUTAS REGISTRADAS EN LA APP ---")
+    for route in app.routes:
+        methods = getattr(route, "methods", None)
+        print(f"Ruta: {route.path} | Métodos: {methods}")
 
 app.add_middleware(
     CORSMiddleware,
