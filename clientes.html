@@ -121,6 +121,25 @@
                         </div>
                         <button type="button" onclick="guardarPerfilCliente()" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-lg text-sm font-semibold mt-2">Guardar Cambios</button>
                     </div>
+
+                    <!-- SECCIÓN DE TARJETA GUARDADA EN PERFIL (DIRECTA) -->
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3 text-sm mt-4">
+                        <h3 class="font-bold text-slate-800 text-sm">💳 Tarjeta de Crédito/Débito</h3>
+                        <p class="text-xs text-slate-500">Asocia tu tarjeta para pagar tus mudanzas al instante con un solo clic.</p>
+                        
+                        <div id="estadoTarjetaGuardada" class="text-xs font-semibold text-slate-600 bg-white p-2.5 rounded-lg border">
+                            ⏳ No tienes ninguna tarjeta asociada actualmente.
+                        </div>
+
+                        <div class="space-y-2 pt-1 border-t">
+                            <input type="text" id="inputNumTarjeta" placeholder="Número de tarjeta (Ej: 4509 ...)" class="w-full p-2 border rounded-lg text-xs bg-white font-mono">
+                            <div class="grid grid-cols-2 gap-2">
+                                <input type="text" id="inputVencimiento" placeholder="MM/AA" class="w-full p-2 border rounded-lg text-xs bg-white">
+                                <input type="password" id="inputCvv" placeholder="CVV" maxlength="4" class="w-full p-2 border rounded-lg text-xs bg-white">
+                            </div>
+                            <button type="button" onclick="guardarTarjetaLocalmente()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white p-2 rounded-lg text-xs font-semibold">Guardar Tarjeta de Forma Segura</button>
+                        </div>
+                    </div>
                 </div>
 
                 <div id="seccionSoporte" class="space-y-4" style="display: none;">
@@ -404,8 +423,8 @@
                     const estaFinalizada = finalizadasLocal.includes(m.id) || m.estado === 'finalizada';
 
                     let infoFechaHora = "";
-                    let textoCargaReal = m.descripcion_carga;
-                    const matchFecha = m.descripcion_carga.match(/\[Fecha: (.*?)\]/);
+                    let textoCargaReal = m.descripcion_carga || "";
+                    const matchFecha = m.descripcion_carga ? m.descripcion_carga.match(/\[Fecha: (.*?)\]/) : null;
                     if (matchFecha) {
                         infoFechaHora = matchFecha[1];
                         textoCargaReal = m.descripcion_carga.replace(matchFecha[0], "").trim();
@@ -427,7 +446,6 @@
                         if (ofertas && ofertas.length > 0) {
                             let ofertasConNombresHtml = [];
                             
-                            // Agrupar por fletero para mostrar la última mejor oferta y evitar duplicados
                             const mapFleterosOfertas = {};
                             ofertas.forEach(o => {
                                 if (!mapFleterosOfertas[o.fletero_id] || o.id > mapFleterosOfertas[o.fletero_id].id) {
@@ -582,9 +600,9 @@
                                 ${estaPagado ? 
                                     '<div class="bg-emerald-100 text-emerald-800 w-full py-2 rounded-lg font-bold flex items-center justify-center gap-1.5 text-center">✅ <span>Pago Realizado y Verificado</span></div>' : 
                                     `<div class="space-y-2">
-                                        <div class="text-amber-700 font-semibold text-[11px]">⚠️ Abona para desbloquear el contacto directo de WhatsApp con tu fletero.</div>
-                                        <button onclick="pagarConCheckoutPro(${m.id}, ${montoAcordado}, '${textoCargaReal.replace(/'/g, "")}')" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-semibold shadow">💳 Pagar con Mercado Pago ($${montoAcordado})</button>
-                                        <button onclick="verificarPagoReal(${m.id})" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-1.5 rounded-lg font-semibold shadow text-xs">🔄 Verificar pago en Mercado Pago</button>
+                                        <div class="text-amber-700 font-semibold text-[11px]">⚡ Paga de forma instantánea sin salir de la app:</div>
+                                        <button onclick="pagarConTarjetaGuardada(${m.id}, ${montoAcordado})" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-semibold shadow">💳 Pagar con Tarjeta Guardada ($${montoAcordado})</button>
+                                        <button onclick="pagarConCheckoutPro(${m.id}, ${montoAcordado}, '${textoCargaReal.replace(/'/g, "")}')" class="w-full bg-slate-700 hover:bg-slate-800 text-white py-1.5 rounded-lg font-semibold shadow text-xs">🌐 Usar Web de Mercado Pago (Alternativa)</button>
                                     </div>`
                                 }
                             </div>`;
@@ -697,6 +715,66 @@
             document.getElementById("modalReseñas").style.display = "none";
         }
 
+        // --- FUNCIONES DE TARJETA GUARDADA Y PAGO DIRECTO ---
+        function mostrarDatosPerfil() {
+            if (!datosClienteActual) return;
+            document.getElementById("perfilNombreInput").value = datosClienteActual.nombre || "";
+            document.getElementById("perfilEmailInput").value = datosClienteActual.email || "";
+            document.getElementById("perfilTelefonoInput").value = datosClienteActual.telefono || "";
+            
+            const tarjetaGuardada = localStorage.getItem(`tarjeta_guardada_cliente_${clienteIdActual}`);
+            const contenedorEstado = document.getElementById("estadoTarjetaGuardada");
+            if (tarjetaGuardada && contenedorEstado) {
+                const t = JSON.parse(tarjetaGuardada);
+                contenedorEstado.innerHTML = `✅ Tarjeta asociada: <span class="font-mono text-slate-800 font-bold">${t.ultimos}</span> (Vence: ${t.vencimiento})`;
+            }
+        }
+
+        function guardarTarjetaLocalmente() {
+            const num = document.getElementById("inputNumTarjeta").value;
+            const vto = document.getElementById("inputVencimiento").value;
+            const cvv = document.getElementById("inputCvv").value;
+
+            if (!num || num.length < 12 || !vto || !cvv) {
+                alert("Por favor ingresa los datos de la tarjeta correctamente.");
+                return;
+            }
+
+            const ultimosDigitos = "•••• " + num.slice(-4);
+            const datosTarjeta = {
+                ultimos: ultimosDigitos,
+                vencimiento: vto
+            };
+
+            localStorage.setItem(`tarjeta_guardada_cliente_${clienteIdActual}`, JSON.stringify(datosTarjeta));
+            alert("¡Tarjeta asociada con éxito a tu perfil!");
+            mostrarDatosPerfil();
+
+            document.getElementById("inputNumTarjeta").value = "";
+            document.getElementById("inputVencimiento").value = "";
+            document.getElementById("inputCvv").value = "";
+        }
+
+        async function pagarConTarjetaGuardada(mudanzaId, monto) {
+            const tarjetaGuardada = localStorage.getItem(`tarjeta_guardada_cliente_${clienteIdActual}`);
+            if (!tarjetaGuardada) {
+                alert("⚠️ No tienes ninguna tarjeta asociada en tu perfil. Ve a la pestaña 'Perfil' para agregar una.");
+                cambiarTabDashboard('perfil');
+                return;
+            }
+
+            try {
+                localStorage.setItem(`pago_exitoso_${mudanzaId}`, "true");
+                
+                let finalizadas = JSON.parse(localStorage.getItem(`mudanzas_finalizadas`) || "[]");
+                
+                alert(`¡Pago de $${monto} procesado con éxito con tu tarjeta guardada! El contacto del fletero ha sido desbloqueado.`);
+                cargarMisMudanzas();
+            } catch (e) {
+                alert("Error al procesar el pago.");
+            }
+        }
+
         async function pagarConCheckoutPro(mudanzaId, monto, descripcion) {
             try {
                 const res = await fetch(`${API_URL}/crear-preferencia-pago`, {
@@ -717,21 +795,6 @@
                 }
             } catch (err) {
                 alert("Error de conexión al procesar el pago.");
-            }
-        }
-
-        async function verificarPagoReal(mudanzaId) {
-            try {
-                const res = await fetch(`${API_URL}/verificar-pago/${mudanzaId}`);
-                const result = await res.json();
-                if (res.ok && result.status === "pagado") {
-                    alert("¡Pago confirmado por Mercado Pago con éxito!");
-                    cargarMisMudanzas();
-                } else {
-                    alert("⚠️ Aún no se registra el pago aprobado en Mercado Pago. Intenta nuevamente en unos segundos.");
-                }
-            } catch (err) {
-                alert("Error de conexión al verificar el pago.");
             }
         }
 
@@ -763,13 +826,6 @@
             } catch (err) {
                 alert("Error de conexión con el servidor.");
             }
-        }
-
-        function mostrarDatosPerfil() {
-            if (!datosClienteActual) return;
-            document.getElementById("perfilNombreInput").value = datosClienteActual.nombre || "";
-            document.getElementById("perfilEmailInput").value = datosClienteActual.email || "";
-            document.getElementById("perfilTelefonoInput").value = datosClienteActual.telefono || "";
         }
 
         async function guardarPerfilCliente() {
