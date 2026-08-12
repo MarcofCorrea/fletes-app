@@ -11,7 +11,6 @@ from sqlalchemy import text
 
 Base.metadata.create_all(bind=engine)
 
-# Bloque seguro para actualizar columnas nuevas sin perder datos en bases de datos existentes
 try:
     with engine.begin() as connection:
         connection.execute(text("ALTER TABLE mudanzas ADD COLUMN estado_pago VARCHAR DEFAULT 'pendiente'"))
@@ -44,7 +43,6 @@ app.include_router(fleteros.router)
 app.include_router(mudanzas.router)
 app.include_router(ofertas.router)
 
-# Inicialización con el Access Token de prueba de Mercado Pago provisto
 sdk = mercadopago.SDK("APP_USR-2370906297861152-081112-44bd34ccbf6c5ca4a15f26712bee3918-3609276874")
 
 class ItemPago(BaseModel):
@@ -81,7 +79,6 @@ def crear_preferencia(item: ItemPago, request: Request):
                     "currency_id": "ARS"
                 }
             ],
-            # URLs de retorno automático hacia la aplicación configuradas para Render y auto_return
             "back_urls": {
                 "success": f"https://fletes-app.onrender.com/cliente.html?pago=exitoso&mudanza_id={item.mudanza_id}",
                 "failure": f"https://fletes-app.onrender.com/cliente.html?pago=fallido&mudanza_id={item.mudanza_id}",
@@ -95,7 +92,6 @@ def crear_preferencia(item: ItemPago, request: Request):
         
         if isinstance(preference_response, dict):
             resp_body = preference_response.get("response", preference_response)
-            # Soporte prioritario para init_point y sandbox_init_point en modo pruebas
             init_point = resp_body.get("sandbox_init_point") or resp_body.get("init_point")
             if init_point:
                 return {"init_point": init_point}
@@ -172,7 +168,7 @@ def guardar_tarjeta(data: RegistrarTarjetaIn):
         return {"detail": str(e)}
 
 @app.post("/pagar-con-tarjeta-guardada")
-def pagar_con_tarjeta-guardada(pago: CobroGuardadoIn):
+def pagar_con_tarjeta_guardada(pago: CobroGuardadoIn):
     try:
         payment_data = {
             "transaction_amount": float(pago.monto),
