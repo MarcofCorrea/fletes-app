@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from typing import List
 from database import get_db
 from models import OfertaDB, MudanzaDB, UsuarioDB
-from schemas import OfertaCreate
+from schemas import OfertaCreate, OfertaResponse
 
 router = APIRouter(tags=["Ofertas"])
 
@@ -29,8 +30,8 @@ def crear_oferta(oferta: OfertaCreate, db: Session = Depends(get_db)):
     db.refresh(nueva_oferta)
     return {"mensaje": "Oferta creada con éxito", "oferta": nueva_oferta}
 
-@router.get("", response_model=list)
-@router.get("/", response_model=list)
+@router.get("", response_model=List[OfertaResponse])
+@router.get("/", response_model=List[OfertaResponse])
 def listar_ofertas(db: Session = Depends(get_db)):
     return db.query(OfertaDB).all()
 

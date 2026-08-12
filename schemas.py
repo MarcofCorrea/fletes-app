@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 class ClienteCreate(BaseModel):
     nombre: str
@@ -40,3 +40,13 @@ class OfertaCreate(BaseModel):
 class OfertaUpdate(BaseModel):
     nuevo_monto: float
     nuevo_tiempo: str
+
+class OfertaResponse(BaseModel):
+    id: int
+    mudanza_id: int
+    fletero_id: int
+    monto_oferta: float
+    tiempo_estimado: str
+    estado: str
+
+    model_config = ConfigDict(from_attributes=True)
