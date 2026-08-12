@@ -38,10 +38,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(clientes.router)
-app.include_router(fleteros.router)
-app.include_router(mudanzas.router)
-app.include_router(ofertas.router)
+# Corrección de prefijos para evitar errores 404 en las peticiones del frontend
+app.include_router(clientes.router, prefix="/clientes")
+app.include_router(fleteros.router, prefix="/fleteros")
+app.include_router(mudanzas.router, prefix="/mudanzas")
+app.include_router(ofertas.router, prefix="/ofertas")
 
 sdk = mercadopago.SDK("APP_USR-2370906297861152-081112-44bd34ccbf6c5ca4a15f26712bee3918-3609276874")
 
