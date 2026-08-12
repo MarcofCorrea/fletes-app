@@ -44,6 +44,7 @@ app.include_router(fleteros.router)
 app.include_router(mudanzas.router)
 app.include_router(ofertas.router)
 
+# Inicialización con el Access Token de prueba de Mercado Pago provisto
 sdk = mercadopago.SDK("APP_USR-2370906297861152-081112-44bd34ccbf6c5ca4a15f26712bee3918-3609276874")
 
 class ItemPago(BaseModel):
@@ -80,11 +81,13 @@ def crear_preferencia(item: ItemPago, request: Request):
                     "currency_id": "ARS"
                 }
             ],
+            # URLs de retorno automático hacia la aplicación configuradas para Render y auto_return
             "back_urls": {
-                "success": f"{base_url}/clientes.html?pago_exitoso=true&mudanza_id={item.mudanza_id}",
-                "failure": f"{base_url}/clientes.html?pago_fallido=true&mudanza_id={item.mudanza_id}",
-                "pending": f"{base_url}/clientes.html?pago_pendiente=true&mudanza_id={item.mudanza_id}"
+                "success": f"https://fletes-app.onrender.com/cliente.html?pago=exitoso&mudanza_id={item.mudanza_id}",
+                "failure": f"https://fletes-app.onrender.com/cliente.html?pago=fallido&mudanza_id={item.mudanza_id}",
+                "pending": f"https://fletes-app.onrender.com/cliente.html?pago=pendiente&mudanza_id={item.mudanza_id}"
             },
+            "auto_return": "approved",
             "external_reference": str(item.mudanza_id)
         }
         
@@ -92,7 +95,8 @@ def crear_preferencia(item: ItemPago, request: Request):
         
         if isinstance(preference_response, dict):
             resp_body = preference_response.get("response", preference_response)
-            init_point = resp_body.get("init_point") or resp_body.get("sandbox_init_point")
+            # Soporte prioritario para init_point y sandbox_init_point en modo pruebas
+            init_point = resp_body.get("sandbox_init_point") or resp_body.get("init_point")
             if init_point:
                 return {"init_point": init_point}
         
@@ -168,7 +172,7 @@ def guardar_tarjeta(data: RegistrarTarjetaIn):
         return {"detail": str(e)}
 
 @app.post("/pagar-con-tarjeta-guardada")
-def pagar_con_tarjeta_guardada(pago: CobroGuardadoIn):
+def pagar_con_tarjeta-guardada(pago: CobroGuardadoIn):
     try:
         payment_data = {
             "transaction_amount": float(pago.monto),
@@ -207,6 +211,6 @@ def calificar_usuario(data: CalificacionIn):
 
 @app.get("/api-info")
 def raiz():
-    return {"mensaje": "¡Bienvenido a la API de FletesApp con verificación de pagos y soporte bancario! 🚀"}
+    return {"mensaje": "¡Bienvenido a la API de FletesApp con verificación de pagos y soporte bancario en Modo Tester! 🚀"}
 
 app.mount("/", StaticFiles(directory=".", html=True), name="static")
