@@ -63,8 +63,11 @@ class CobroGuardadoIn(BaseModel):
     card_id: str
 
 @app.post("/crear-preferencia-pago")
-def crear_preferencia(item: ItemPago):
+def crear_preferencia(item: ItemPago, request: Request):
     try:
+        # Detectar dinámicamente si estamos en local o en Render (producción)
+        base_url = str(request.base_url).rstrip("/")
+        
         preference_data = {
             "items": [
                 {
@@ -75,9 +78,9 @@ def crear_preferencia(item: ItemPago):
                 }
             ],
             "back_urls": {
-                "success": f"http://localhost:8000/clientes.html?pago_exitoso=true&mudanza_id={item.mudanza_id}",
-                "failure": f"http://localhost:8000/clientes.html?pago_fallido=true&mudanza_id={item.mudanza_id}",
-                "pending": f"http://localhost:8000/clientes.html?pago_pendiente=true&mudanza_id={item.mudanza_id}"
+                "success": f"{base_url}/clientes.html?pago_exitoso=true&mudanza_id={item.mudanza_id}",
+                "failure": f"{base_url}/clientes.html?pago_fallido=true&mudanza_id={item.mudanza_id}",
+                "pending": f"{base_url}/clientes.html?pago_pendiente=true&mudanza_id={item.mudanza_id}"
             },
             "external_reference": str(item.mudanza_id)
         }
@@ -183,8 +186,9 @@ def pagar_con_tarjeta_guardada(pago: CobroGuardadoIn):
     except Exception as e:
         return {"detail": str(e)}
 
-@app.get("/")
+@app.get("/api-info")
 def raiz():
     return {"mensaje": "¡Bienvenido a la API de FletesApp con verificación de pagos y soporte bancario! 🚀"}
 
+# Montar los archivos estáticos al final para que sirvan el index.html y los paneles
 app.mount("/", StaticFiles(directory=".", html=True), name="static")
