@@ -369,7 +369,7 @@
             };
 
             try {
-                const res = await fetch(`${API_URL}/mudanzas`, {
+                const res = await fetch(`${API_URL}/mudanzas/`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(data)
