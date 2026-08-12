@@ -37,8 +37,9 @@ app = FastAPI(
 def mostrar_rutas():
     print("--- RUTAS REGISTRADAS EN LA APP ---")
     for route in app.routes:
-        methods = getattr(route, "methods", None)
-        print(f"Ruta: {route.path} | Métodos: {methods}")
+        if hasattr(route, "path"):
+            methods = getattr(route, "methods", None)
+            print(f"Ruta: {route.path} | Métodos: {methods}")
 
 app.add_middleware(
     CORSMiddleware,
