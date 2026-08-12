@@ -54,6 +54,16 @@ def listar_mudanzas(db: Session = Depends(get_db)):
         } for o in ofertas_db]
 
         resultado.append({
+            # Propiedades planas para que el panel del fletero las lea directamente (m.id, m.cliente_id, etc.)
+            "id": m.id,
+            "cliente_id": m.cliente_id,
+            "origen_direccion": m.origen_direccion,
+            "destino_direccion": m.destino_direccion,
+            "descripcion_carga": m.descripcion_carga,
+            "estado": getattr(m, "estado", "buscando_ofertas"),
+            "estado_pago": getattr(m, "estado_pago", "pendiente"),
+            
+            # Estructura anidada original preservada para el cliente
             "mudanza": {
                 "id": m.id,
                 "cliente_id": m.cliente_id,
