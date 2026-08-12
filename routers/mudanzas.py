@@ -1,14 +1,14 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy.orm import Session
 from database import get_db
-from models import MudanzaDB, UsuarioDB
-from schemas import MudanzaCreate
+from models import UsuarioDB, MudanzaDB
+from schemas import MudanzaCreate # (o el esquema que utilices)
 
 router = APIRouter(tags=["Mudanzas"])
 
-@router.post("/mudanzas", status_code=status.HTTP_201_CREATED)
+@router.post("/", status_code=status.HTTP_201_CREATED)
 def crear_mudanza(mudanza: MudanzaCreate, db: Session = Depends(get_db)):
-    cliente = db.query(UsuarioDB).filter(UsuarioDB.id == mudanza.cliente_id, UsuarioDB.tipo == "cliente").first()
+    cliente = db.query(UsuarioDB).filter(UsuarioDB.id == mudanza.cliente_id).first()
     if not cliente:
         raise HTTPException(status_code=404, detail="Cliente no encontrado")
 
@@ -25,6 +25,6 @@ def crear_mudanza(mudanza: MudanzaCreate, db: Session = Depends(get_db)):
     db.refresh(nueva_mudanza)
     return {"mensaje": "Mudanza publicada con éxito", "mudanza": nueva_mudanza}
 
-@router.get("/mudanzas/")
+@router.get("/")
 def listar_mudanzas(db: Session = Depends(get_db)):
     return db.query(MudanzaDB).all()
