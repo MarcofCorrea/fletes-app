@@ -1,62 +1,65 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from typing import List
 from database import get_db
-from models import OfertaDB, MudanzaDB, UsuarioDB
-from schemas import OfertaCreate, OfertaResponse
+from models import OfertaDB, MudanzaDB
+from pydantic import BaseModel
 
 router = APIRouter(tags=["Ofertas"])
+
+class OfertaCreate(BaseModel):
+    mudanza_id: int
+    fletero_id: int
+    monto_oferta: float
+    tiempo_estimado: str
+    estado: str = "pendiente"
 
 @router.post("", status_code=status.HTTP_201_CREATED)
 @router.post("/", status_code=status.HTTP_201_CREATED)
 def crear_oferta(oferta: OfertaCreate, db: Session = Depends(get_db)):
-    fletero = db.query(UsuarioDB).filter(UsuarioDB.id == oferta.fletero_id, UsuarioDB.tipo == "fletero").first()
-    if not fletero:
-        raise HTTPException(status_code=404, detail="Fletero no encontrado")
-    
-    mudanza = db.query(MudanzaDB).filter(MudanzaDB.id == oferta.mudanza_id).first()
-    if not mudanza:
-        raise HTTPException(status_code=404, detail="Mudanza no encontrada")
-
-    nueva_oferta = OfertaDB(
+    nueva = OfertaDB(
         mudanza_id=oferta.mudanza_id,
         fletero_id=oferta.fletero_id,
         monto_oferta=oferta.monto_oferta,
         tiempo_estimado=oferta.tiempo_estimado,
-        estado="pendiente"
+        estado=oferta.estado
     )
-    db.add(nueva_oferta)
+    db.add(nueva)
     db.commit()
-    db.refresh(nueva_oferta)
-    return {"mensaje": "Oferta creada con éxito", "oferta": nueva_oferta}
+    db.refresh(nueva)
+    return {"mensaje": "Oferta creada con éxito", "oferta": {
+        "id": nueva.id,
+        "mudanza_id": nueva.mudanza_id,
+        "fletero_id": nueva.fletero_id,
+        "monto_oferta": nueva.monto_oferta,
+        "tiempo_estimado": nueva.tiempo_estimado,
+        "estado": nueva.estado
+    }}
 
-@router.get("", response_model=List[OfertaResponse])
-@router.get("/", response_model=List[OfertaResponse])
+@router.get("", response_model=list)
+@router.get("/", response_model=list)
 def listar_ofertas(db: Session = Depends(get_db)):
-    return db.query(OfertaDB).all()
-
-@router.get("/fletero/{fletero_id}/ofertas")
-def listar_ofertas_fletero(fletero_id: int, db: Session = Depends(get_db)):
-    return db.query(OfertaDB).filter(OfertaDB.fletero_id == fletero_id).all()
+    ofertas = db.query(OfertaDB).all()
+    return [{
+        "id": o.id,
+        "mudanza_id": o.mudanza_id,
+        "fletero_id": o.fletero_id,
+        "monto_oferta": o.monto_oferta,
+        "tiempo_estimado": o.tiempo_estimado,
+        "estado": o.estado
+    } for o in ofertas]
 
 @router.put("/{oferta_id}/aceptar")
+@router.put("/{oferta_id}/aceptar/")
 def aceptar_oferta(oferta_id: int, db: Session = Depends(get_db)):
     oferta = db.query(OfertaDB).filter(OfertaDB.id == oferta_id).first()
     if not oferta:
         raise HTTPException(status_code=404, detail="Oferta no encontrada")
-    
     oferta.estado = "aceptada"
     
+    # Actualizamos también el estado de la mudanza relacionada
     mudanza = db.query(MudanzaDB).filter(MudanzaDB.id == oferta.mudanza_id).first()
     if mudanza:
-        mudanza.estado = "en_curso"
-        
-    otras_ofertas = db.query(OfertaDB).filter(
-        OfertaDB.mudanza_id == oferta.mudanza_id, 
-        OfertaDB.id != oferta_id
-    ).all()
-    for otra in otras_ofertas:
-        otra.estado = "rechazada"
+        mudanza.estado = "aprobada"
         
     db.commit()
-    return {"mensaje": "Oferta aceptada con éxito. Viaje en curso."}
+    return {"mensaje": "Oferta aceptada con éxito"}
