@@ -6,7 +6,7 @@ from schemas import MudanzaCreate
 
 router = APIRouter(tags=["Mudanzas"])
 
-@router.post("/mudanzas/", status_code=status.HTTP_201_CREATED)
+@router.post("/mudanzas", status_code=status.HTTP_201_CREATED)
 def crear_mudanza(mudanza: MudanzaCreate, db: Session = Depends(get_db)):
     cliente = db.query(UsuarioDB).filter(UsuarioDB.id == mudanza.cliente_id, UsuarioDB.tipo == "cliente").first()
     if not cliente:
