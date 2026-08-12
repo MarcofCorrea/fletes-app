@@ -378,25 +378,27 @@
                     let nombreCliente = `Cliente #${m.cliente_id || 1}`;
                     let telefonoCliente = "3511112233";
                     let calificacionClienteNum = 5.0;
-                    let clienteIdReal = m.cliente_id || 1;
+                    let clienteIdReal = m.cliente_id ? m.cliente_id : 1;
                     
-                    try {
-                        let resCliente = await fetch(`${API_URL}/clientes/${m.cliente_id}`);
-                        if (!resCliente.ok) {
-                            resCliente = await fetch(`${API_URL}/usuarios/${m.cliente_id}`);
-                        }
-                        if (resCliente.ok) {
-                            const cliData = await resCliente.json();
-                            const clienteObj = cliData.cliente || cliData;
-                            if (clienteObj && clienteObj.nombre) {
-                                nombreCliente = clienteObj.nombre;
+                    if (m.cliente_id) {
+                        try {
+                            let resCliente = await fetch(`${API_URL}/clientes/${m.cliente_id}`);
+                            if (!resCliente.ok) {
+                                resCliente = await fetch(`${API_URL}/usuarios/${m.cliente_id}`);
                             }
-                            telefonoCliente = clienteObj.telefono || telefonoCliente;
-                            if (clienteObj.calificacion) {
-                                calificacionClienteNum = clienteObj.calificacion;
+                            if (resCliente.ok) {
+                                const cliData = await resCliente.json();
+                                const clienteObj = cliData.cliente || cliData;
+                                if (clienteObj && clienteObj.nombre) {
+                                    nombreCliente = clienteObj.nombre;
+                                }
+                                telefonoCliente = clienteObj.telefono || telefonoCliente;
+                                if (clienteObj.calificacion) {
+                                    calificacionClienteNum = clienteObj.calificacion;
+                                }
                             }
-                        }
-                    } catch(e) {}
+                        } catch(e) {}
+                    }
 
                     let fechaOriginal = "Fecha a convenir";
                     let horaOriginal = "00:00";
@@ -404,7 +406,7 @@
                     let fechaOrdenKey = "9999-12-31"; 
                     let horaOrdenKey = "23:59";
 
-                    if (m.descripcion_carga) {
+                    if (m && m.descripcion_carga) {
                         const matchFechaCompleta = m.descripcion_carga.match(/\[Fecha: (.*?) - (.*?)\]/);
                         const matchFechaSimple = m.descripcion_carga.match(/\[Fecha: (.*?)\]/);
                         
