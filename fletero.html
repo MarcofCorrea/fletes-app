@@ -11,7 +11,7 @@
             <h1 class="text-xl font-bold">🚚 Panel de Fletero</h1>
         </header>
 
-        <!-- SECCIÓN DE AUTENTICACIÓN (LOGIN / REGISTRO) -->
+        <!-- SECCIÓN DE AUTENTICACIÓN ACTIVA -->
         <div id="pantallaAuth" class="flex-1 flex flex-col">
             <div class="flex border-b bg-slate-50 text-sm font-semibold">
                 <button type="button" onclick="cambiarTabAuth('login')" id="btnTabLogin" class="flex-1 py-3 text-center border-b-2 border-slate-900 text-slate-900">Iniciar Sesión</button>
@@ -25,6 +25,9 @@
                         <input type="email" id="loginEmail" placeholder="Correo electrónico" class="w-full p-2 border rounded-lg text-sm bg-white">
                         <input type="password" id="loginPassword" placeholder="Contraseña" class="w-full p-2 border rounded-lg text-sm bg-white">
                         <button onclick="ejecutarLogin()" class="w-full bg-slate-900 text-white p-2 rounded-lg text-sm font-semibold">Entrar</button>
+                        
+                        <!-- ACCESO RÁPIDO DE PRUEBA -->
+                        <button type="button" onclick="accesoRapidoFletero()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white p-2 rounded-lg text-sm font-semibold shadow">🚀 Entrar como Fletero (Prueba)</button>
                     </div>
                 </div>
 
@@ -74,7 +77,7 @@
             </div>
         </div>
 
-        <!-- PANTALLA DASHBOARD -->
+        <!-- PANTALLA DASHBOARD (Oculta hasta hacer login) -->
         <div id="pantallaDashboard" class="flex-1 flex flex-col" style="display: none;">
             <div class="flex border-b bg-slate-900 text-white text-[11px]">
                 <button onclick="cambiarTabDashboard('solicitudes')" id="navSolicitudes" class="flex-1 py-3 text-center border-b-2 border-emerald-400 font-semibold">Solicitudes de Mudanzas</button>
@@ -94,10 +97,14 @@
                 <!-- SECCIÓN PERFIL EDITABLE -->
                 <div id="seccionPerfil" style="display:none;" class="space-y-4">
                     <div class="flex justify-between items-center border-b pb-2">
-                        <h2 class="font-bold text-base text-slate-800">👤 Mi Perfil y Datos Bancarios</h2>
+                        <h2 class="font-bold text-base text-slate-800">👤 Mi Perfil, Calificación y Datos Bancarios</h2>
                         <button onclick="cerrarSesion()" class="bg-red-500 text-white px-3 py-1 rounded text-xs">Cerrar Sesión</button>
                     </div>
                     <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3 text-sm">
+                        <div class="text-center bg-white p-3 rounded-lg border border-slate-100 shadow-sm cursor-pointer" onclick="verReseñasUsuario('fletero', fleteroIdActual, 'Mi Perfil')">
+                            <span class="text-xs text-slate-500 font-semibold uppercase block">Calificación Promedio (Ver Comentarios)</span>
+                            <span id="perfilCalificacionEstrellas" class="text-amber-500 font-bold text-lg">⭐⭐⭐⭐⭐ (5.0)</span>
+                        </div>
                         <div>
                             <label class="text-slate-500 text-xs font-semibold block mb-1">NOMBRE COMPLETO</label>
                             <input type="text" id="perfilNombreInput" class="w-full p-2 border rounded-lg text-sm bg-white">
@@ -139,12 +146,58 @@
             </div>
         </div>
     </div>
+
+    <!-- MODAL PARA VER COMENTARIOS Y VALORACIONES -->
+    <div id="modalReseñas" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" style="display: none;">
+        <div class="bg-white rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl max-h-[80vh] flex flex-col">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 id="modalReseñasTitulo" class="font-bold text-base text-slate-800">💬 Comentarios y Valoraciones</h3>
+                <button onclick="cerrarModalReseñas()" class="text-slate-400 hover:text-red-500 font-bold text-lg">✕</button>
+            </div>
+            <div id="modalReseñasLista" class="overflow-y-auto space-y-3 flex-1 pr-1">
+                <p class="text-sm text-slate-500 text-center py-4">Cargando opiniones...</p>
+            </div>
+        </div>
+    </div>
+
     <script>
         const API_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" 
             ? "http://127.0.0.1:8000" 
             : "https://fletes-app.onrender.com";
 
         let fleteroIdActual = sessionStorage.getItem("fleteroId");
+
+        window.addEventListener("DOMContentLoaded", () => {
+            if (fleteroIdActual) {
+                document.getElementById("pantallaAuth").style.display = "none";
+                document.getElementById("pantallaDashboard").style.display = "flex";
+                cargarDatosDashboard();
+            }
+        });
+
+        async function accesoRapidoFletero() {
+            try {
+                const res = await fetch(`${API_URL}/fleteros/`);
+                const fleteros = await res.json();
+
+                if (res.ok && fleteros && fleteros.length > 0) {
+                    const fleteroPrueba = fleteros[0];
+                    fleteroIdActual = fleteroPrueba.id; 
+                    
+                    sessionStorage.setItem("fleteroId", fleteroIdActual); 
+                    sessionStorage.setItem("datosFletero", JSON.stringify(fleteroPrueba));
+                    
+                    document.getElementById("pantallaAuth").style.display = "none"; 
+                    document.getElementById("pantallaDashboard").style.display = "flex"; 
+                    cargarDatosDashboard();
+                } else {
+                    alert("⚠️ No hay fleteros registrados. Por favor, regístrate por primera vez desde la pestaña 'Registrarse'.");
+                }
+            } catch (e) {
+                console.error(e);
+                alert("Error de conexión con el servidor local.");
+            }
+        }
 
         function cambiarTabAuth(tab) {
             const loginDiv = document.getElementById("subTabFletero-login");
@@ -246,21 +299,43 @@
             const eliminadasSol = JSON.parse(localStorage.getItem(`fletero_sol_eliminadas_${fleteroIdActual}`) || "[]");
             const eliminadasTras = JSON.parse(localStorage.getItem(`fletero_tras_eliminadas_${fleteroIdActual}`) || "[]");
             const aprobadasPorFletero = JSON.parse(localStorage.getItem(`fletero_aprobadas_manual_${fleteroIdActual}`) || "[]");
+            const finalizadasLocal = JSON.parse(localStorage.getItem(`mudanzas_finalizadas`) || "[]");
+
+            // Mostrar notificaciones pendientes de competencia de precios si las hubiera
+            const notificaciones = JSON.parse(localStorage.getItem(`notificaciones_fletero_${fleteroIdActual}`) || "[]");
+            if (notificaciones.length > 0) {
+                let bannerNotif = document.createElement("div");
+                bannerNotif.className = "bg-amber-100 border border-amber-300 text-amber-900 p-3 rounded-xl text-xs space-y-1 mb-4 shadow-sm";
+                bannerNotif.innerHTML = `<div class="font-bold flex justify-between"><span>🔔 Alertas de Competencia</span><span class="cursor-pointer text-red-600" onclick="limpiarNotificaciones()">Limpiar</span></div>`;
+                notificaciones.forEach(n => {
+                    bannerNotif.innerHTML += `<div>• ${n.mensaje} <span class="text-[9px] text-slate-500">(${n.fecha})</span></div>`;
+                });
+                cont.appendChild(bannerNotif);
+            }
 
             let arrayAprobadas = [];
 
             for (const m of mudanzas) {
-                let nombreCliente = `Cliente ID: ${m.cliente_id}`;
+                let nombreCliente = `Cliente #${m.cliente_id}`;
                 let telefonoCliente = "No disponible";
+                let calificacionClienteNum = 5.0;
+                let clienteIdReal = m.cliente_id;
+                
                 try {
-                    let resCliente = await fetch(`${API_URL}/usuarios/${m.cliente_id}`);
+                    let resCliente = await fetch(`${API_URL}/clientes/${m.cliente_id}`);
                     if (!resCliente.ok) {
-                        resCliente = await fetch(`${API_URL}/clientes/${m.cliente_id}`);
+                        resCliente = await fetch(`${API_URL}/usuarios/${m.cliente_id}`);
                     }
                     if (resCliente.ok) {
                         const cliData = await resCliente.json();
-                        nombreCliente = cliData.nombre || cliData.cliente?.nombre || nombreCliente;
-                        telefonoCliente = cliData.telefono || cliData.cliente?.telefono || telefonoCliente;
+                        const clienteObj = cliData.cliente || cliData;
+                        if (clienteObj && clienteObj.nombre) {
+                            nombreCliente = clienteObj.nombre;
+                        }
+                        telefonoCliente = clienteObj.telefono || telefonoCliente;
+                        if (clienteObj.calificacion) {
+                            calificacionClienteNum = clienteObj.calificacion;
+                        }
                     }
                 } catch(e) {}
 
@@ -280,6 +355,7 @@
                 }
 
                 const ofertaAceptadaCliente = ofertas.find(o => o.mudanza_id == m.id && o.fletero_id == fleteroIdActual && (o.estado === 'aceptada' || o.estado === 'aprobada'));
+                const estaFinalizada = finalizadasLocal.includes(m.id) || m.estado === 'finalizada';
                 
                 let infoFechaHoraFinal = `${fechaOriginal} a las ${horaOriginal} hs`;
                 if (ofertaAceptadaCliente && ofertaAceptadaCliente.tiempo_estimado && ofertaAceptadaCliente.tiempo_estimado.includes("Hora prop:")) {
@@ -289,15 +365,15 @@
                     infoFechaHoraFinal = `${fechaOriginal} a las ${horaOriginal} hs (Modificada)`;
                 }
 
-                if (aprobadasPorFletero.includes(m.id)) {
+                if (aprobadasPorFletero.includes(m.id) || estaFinalizada) {
                     if (eliminadasTras.includes(m.id)) continue;
 
                     const origenMap = encodeURIComponent(m.origen_direccion || '');
                     const destinoMap = encodeURIComponent(m.destino_direccion || '');
                     const mapEmbedUrl = `https://maps.google.com/maps?q=${origenMap}+to+${destinoMap}&output=embed`;
-                    const montoAcordado = ofertaAceptadaCliente ? ofertaAceptadaCliente.monto_oferta : '0';
+                    const montoFinalAcordado = ofertaAceptadaCliente ? ofertaAceptadaCliente.monto_oferta : '0';
                     
-                    const estaPagado = m.estado_pago === "pagado"; 
+                    const estaPagado = m.estado_pago === "pagado" || estaFinalizada; 
                     
                     let contactoClienteHtml = `<span class="text-amber-700 italic">🔒 Se ocultará hasta que el cliente abone y el pago quede retenido en garantía</span>`;
                     if (estaPagado) {
@@ -306,21 +382,44 @@
                         contactoClienteHtml = `<a href="${enlaceWsp}" target="_blank" class="text-emerald-700 font-bold underline flex items-center gap-1">💬 Abrir WhatsApp (${telefonoCliente})</a>`;
                     }
 
-                    const estadoPagoHtml = estaPagado 
-                        ? '<span class="bg-emerald-200 text-emerald-900 px-2.5 py-1 rounded font-bold text-xs flex items-center gap-1">🔒 <span>Pago Retenido en Garantía (Se liberará al finalizar)</span></span>' 
-                        : '<span class="bg-amber-100 text-amber-800 px-2.5 py-1 rounded font-semibold text-xs flex items-center gap-1">⏳ <span>Pago Pendiente</span></span>';
+                    const estadoDineroHtml = estaFinalizada 
+                        ? '<span class="bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded font-bold text-xs">💸 Dinero Liberado y Transferido</span>'
+                        : (estaPagado ? '<span class="bg-emerald-200 text-emerald-900 px-2.5 py-1 rounded font-bold text-xs">🔒 Pago Retenido en Garantía</span>' : '<span class="bg-amber-100 text-amber-800 px-2.5 py-1 rounded font-semibold text-xs">⏳ Pago Pendiente</span>');
+
+                    let calificacionMutuaHtml = "";
+                    if (estaFinalizada) {
+                        const misReseñasGuardadas = JSON.parse(localStorage.getItem(`reseñas_mudanza_${m.id}_fletero`) || "null");
+                        if (misReseñasGuardadas) {
+                            calificacionMutuaHtml = `<div class="bg-white p-2 rounded border text-xs text-emerald-700 font-semibold mt-2">✅ Ya enviaste tu valoración a este cliente.</div>`;
+                        } else {
+                            calificacionMutuaHtml = `
+                                <div class="bg-white p-3 rounded-lg border border-amber-200 space-y-2 mt-2 text-xs">
+                                    <div class="font-bold text-slate-700">⭐ Valora al Cliente (${nombreCliente}):</div>
+                                    <div class="flex gap-1" id="estrellas_f_${m.id}">
+                                        <span onclick="seleccionarEstrellas(${m.id}, 'f', 1)" class="cursor-pointer text-slate-300 text-lg hover:text-amber-400 star-${m.id}">★</span>
+                                        <span onclick="seleccionarEstrellas(${m.id}, 'f', 2)" class="cursor-pointer text-slate-300 text-lg hover:text-amber-400 star-${m.id}">★</span>
+                                        <span onclick="seleccionarEstrellas(${m.id}, 'f', 3)" class="cursor-pointer text-slate-300 text-lg hover:text-amber-400 star-${m.id}">★</span>
+                                        <span onclick="seleccionarEstrellas(${m.id}, 'f', 4)" class="cursor-pointer text-slate-300 text-lg hover:text-amber-400 star-${m.id}">★</span>
+                                        <span onclick="seleccionarEstrellas(${m.id}, 'f', 5)" class="cursor-pointer text-slate-300 text-lg hover:text-amber-400 star-${m.id}">★</span>
+                                    </div>
+                                    <input type="hidden" id="val_estrellas_f_${m.id}" value="5">
+                                    <textarea id="comentario_f_${m.id}" placeholder="Escribe un comentario sobre el cliente..." class="w-full p-1.5 border rounded text-xs bg-slate-50"></textarea>
+                                    <button onclick="enviarCalificacionFletero(${m.id}, ${clienteIdReal})" class="w-full bg-emerald-600 text-white py-1.5 rounded font-semibold">Enviar Valoración y Comentario</button>
+                                </div>`;
+                        }
+                    }
 
                     const htmlTarjetaAprobada = `
                         <div id="tarjeta_traslado_${m.id}" class="bg-emerald-50 p-4 rounded-xl border border-emerald-200 space-y-3 text-sm relative">
                             <button onclick="eliminarTarjetaAprobada(${m.id})" class="absolute top-3 right-3 text-slate-400 hover:text-red-500 text-xs font-bold px-1.5 py-0.5 rounded border border-emerald-200 bg-white" title="Ocultar tarjeta">✕</button>
 
                             <div class="flex justify-between items-center border-b border-emerald-200 pb-2 pr-6">
-                                <span class="font-bold text-emerald-900">🚀 Mudanza Aprobada #${m.id}</span>
-                                <span class="bg-emerald-200 text-emerald-800 text-[10px] px-2 py-0.5 rounded font-semibold">Aprobado</span>
+                                <span class="font-bold text-emerald-900">🚀 Mudanza #${m.id} ${estaFinalizada ? '(Finalizada)' : '(Aprobada)'}</span>
                             </div>
                             <div class="bg-white p-2.5 rounded-lg border border-emerald-100 space-y-1 text-xs">
-                                <div class="text-slate-500 font-semibold uppercase text-[10px]">Cliente</div>
-                                <div>👤 <strong>Nombre:</strong> ${nombreCliente}</div>
+                                <div class="text-slate-500 font-semibold uppercase text-[10px]">Cliente Asignado</div>
+                                <div>👤 <strong>Nombre:</strong> <span onclick="verReseñasUsuario('cliente', ${clienteIdReal}, '${nombreCliente}')" class="text-blue-600 underline cursor-pointer font-bold">${nombreCliente}</span></div>
+                                <div class="text-amber-500 font-semibold cursor-pointer" onclick="verReseñasUsuario('cliente', ${clienteIdReal}, '${nombreCliente}')">⭐ ${calificacionClienteNum} (Ver Comentarios)</div>
                                 <div>📞 <strong>Teléfono:</strong> ${contactoClienteHtml}</div>
                             </div>
                             <div class="space-y-1 text-xs">
@@ -329,10 +428,12 @@
                                 <div>📋 <strong>Carga:</strong> ${textoCargaReal}</div>
                                 <div class="text-emerald-800 font-bold">📅 Programada: ${infoFechaHoraFinal}</div>
                                 <div class="flex justify-between items-center pt-2">
-                                    <div>💰 <strong>Monto Acordado:</strong> $${montoAcordado}</div>
-                                    <div>${estadoPagoHtml}</div>
+                                    <div>💰 <strong>Monto:</strong> $${montoFinalAcordado}</div>
+                                    <div>${estadoDineroHtml}</div>
                                 </div>
                             </div>
+                            ${!estaFinalizada ? `<button onclick="marcarComoFinalizado(${m.id})" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-bold text-xs shadow">🏁 Marcar como Finalizado y Liberar Dinero</button>` : ''}
+                            ${calificacionMutuaHtml}
                             <div class="mt-2 rounded-lg overflow-hidden border border-emerald-300">
                                 <iframe width="100%" height="150" style="border:0;" loading="lazy" src="${mapEmbedUrl}"></iframe>
                             </div>
@@ -347,35 +448,57 @@
                     if (eliminadasSol.includes(m.id)) continue;
 
                     const ofertasDeEstaMudanza = ofertas.filter(o => o.mudanza_id == m.id && o.fletero_id == fleteroIdActual);
+                    const historialLocal = JSON.parse(localStorage.getItem(`historial_ofertas_fletero_${fleteroIdActual}_mudanza_${m.id}`) || "[]");
 
                     let htmlOfertasCargadas = "";
-                    if (ofertasDeEstaMudanza.length > 0) {
-                        const ultimaOferta = ofertasDeEstaMudanza[ofertasDeEstaMudanza.length - 1];
-                        
-                        let estadoUltima = "";
-                        if (ultimaOferta.estado === 'aceptada' || ultimaOferta.estado === 'aprobada') {
-                            estadoUltima = `<button onclick="aprobarTrasladoFletero(${m.id}, ${ultimaOferta.id})" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded text-xs font-bold animate-pulse">Aprobar traslado</button>`;
-                        } else {
-                            estadoUltima = `<button onclick="cambiarEstado(${ultimaOferta.id}, 'cancelada')" class="bg-red-500 text-white px-2 py-0.5 rounded text-[10px]">Cancelar</button>`;
+                    
+                    // Si el cliente aceptó alguna oferta en el backend, buscarla
+                    const ofertaAceptadaPorCliente = ofertasDeEstaMudanza.find(o => o.estado === 'aceptada' || o.estado === 'aprobada');
+
+                    if (ofertasDeEstaMudanza.length > 0 || historialLocal.length > 0) {
+                        htmlOfertasCargadas += `
+                            <div class="mt-3 border-t pt-2 space-y-1.5">
+                                <div class="text-[10px] font-semibold text-slate-500 uppercase">Historial de Tus Ofertas y Estado:</div>`;
+                                
+                        if (ofertaAceptadaPorCliente) {
+                            // Si el cliente ya aceptó, mostrar alerta clara y botón de aprobación
+                            htmlOfertasCargadas += `
+                                <div class="bg-amber-50 border border-amber-200 p-2.5 rounded-lg space-y-2 text-xs">
+                                    <div class="font-bold text-amber-800">🎉 ¡El cliente ha pre-aprobado tu oferta de $${ofertaAceptadaPorCliente.monto_oferta}!</div>
+                                    <button onclick="aprobarTrasladoFletero(${m.id}, ${ofertaAceptadaPorCliente.id})" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-1.5 rounded font-bold animate-pulse shadow">✅ Aprobar Mudanza Definitivamente</button>
+                                </div>`;
                         }
 
-                        htmlOfertasCargadas += `
-                            <div class="mt-3 border-t pt-2 space-y-1">
-                                <div class="text-[10px] font-semibold text-slate-500 uppercase">Última Oferta Realizada:</div>
-                                <div class="p-1.5 bg-white border rounded flex justify-between items-center text-xs shadow-sm">
-                                    <span><strong>$${ultimaOferta.monto_oferta}</strong> (${ultimaOferta.tiempo_estimado})</span>
-                                    <span>${estadoUltima}</span>
-                                </div>`;
+                        if (historialLocal.length > 0) {
+                            historialLocal.forEach((h, index) => {
+                                htmlOfertasCargadas += `
+                                    <div class="p-1.5 bg-white border rounded flex justify-between items-center text-xs shadow-sm">
+                                        <span> #${index + 1} ➔ <strong>$${h.monto}</strong> (${h.tiempo})</span>
+                                        <span class="text-[9px] text-slate-400">${h.fecha}</span>
+                                    </div>`;
+                            });
+                        } else {
+                            ofertasDeEstaMudanza.forEach((o, index) => {
+                                htmlOfertasCargadas += `
+                                    <div class="p-1.5 bg-white border rounded flex justify-between items-center text-xs shadow-sm">
+                                        <span> #${index + 1} ➔ <strong>$${o.monto_oferta}</strong> (${o.tiempo_estimado})</span>
+                                        <span class="text-[10px] text-slate-500">${o.estado}</span>
+                                    </div>`;
+                            });
+                        }
                         htmlOfertasCargadas += `</div>`;
                     }
+
+                    const minimoViable = calcularOfertaMinimaViable();
 
                     cont.innerHTML += `
                         <div id="tarjeta_mudanza_${m.id}" class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3 text-sm relative">
                             <button onclick="eliminarTarjeta(${m.id})" class="absolute top-3 right-3 text-slate-400 hover:text-red-500 text-xs font-bold px-1.5 py-0.5 rounded border border-emerald-200 bg-white" title="Ocultar tarjeta">✕</button>
-                            <div class="font-bold text-slate-900 pr-6">📦 Solicitud #${m.id}</div>
+                            <div class="font-bold text-slate-900 pr-6">📦 Solicitud de <span onclick="verReseñasUsuario('cliente', ${clienteIdReal}, '${nombreCliente}')" class="text-blue-600 underline cursor-pointer">${nombreCliente}</span></div>
                             <div class="bg-white p-2.5 rounded-lg border border-slate-100 space-y-1 text-xs">
                                 <div class="text-slate-500 font-semibold uppercase text-[10px]">Información del Cliente</div>
-                                <div>👤 <strong>Nombre:</strong> ${nombreCliente}</div>
+                                <div>👤 <strong>Nombre:</strong> <span onclick="verReseñasUsuario('cliente', ${clienteIdReal}, '${nombreCliente}')" class="text-blue-600 underline cursor-pointer">${nombreCliente}</span></div>
+                                <div class="text-amber-500 font-semibold cursor-pointer" onclick="verReseñasUsuario('cliente', ${clienteIdReal}, '${nombreCliente}')">⭐ ${calificacionClienteNum} (Ver Comentarios)</div>
                                 <div>📞 <strong>Teléfono:</strong> <span class="text-slate-400 italic">Se desbloqueará al abonar la seña</span></div>
                             </div>
                             <div class="space-y-1 text-xs">
@@ -383,11 +506,12 @@
                                 <div>🏁 <strong>Destino:</strong> ${m.destino_direccion || 'No especificada'}</div>
                                 <div>📋 <strong>Carga:</strong> ${textoCargaReal}</div>
                                 <div class="text-blue-700 font-semibold">📅 Programada original: ${fechaOriginal} a las ${horaOriginal} hs</div>
+                                <div class="text-[11px] text-emerald-700 font-medium">💡 Oferta Mínima Viable estimada: <strong>$${minimoViable}</strong> (Combustible + Depreciación)</div>
                             </div>
                             <div class="space-y-2 pt-2 border-t">
-                                <div class="text-[11px] font-semibold text-slate-600">Enviar Oferta y Modificar Hora:</div>
+                                <div class="text-[11px] font-semibold text-slate-600">Enviar/Mejorar Oferta y Modificar Hora:</div>
                                 <div class="grid grid-cols-3 gap-2">
-                                    <input type="number" id="monto_${m.id}" class="p-1.5 border rounded text-xs bg-white" placeholder="Monto ($)">
+                                    <input type="number" id="monto_${m.id}" class="p-1.5 border rounded text-xs bg-white" placeholder="Monto ($)" min="${minimoViable}">
                                     <input type="time" id="hora_${m.id}" class="p-1.5 border rounded text-xs bg-white" value="${horaOriginal}" title="Modificar hora">
                                     <button onclick="enviarOferta(${m.id})" class="bg-slate-900 hover:bg-slate-800 text-white p-1.5 rounded text-xs font-semibold">Ofertar</button>
                                 </div>
@@ -405,9 +529,165 @@
             if(contTraslados.innerHTML === "") {
                 contTraslados.innerHTML = `<p class="text-sm text-slate-500 text-center py-4">No tienes mudanzas aprobadas actualmente.</p>`;
             }
-            if(cont.innerHTML === "") {
+            if(cont.innerHTML === "" && notificaciones.length === 0) {
                 cont.innerHTML = `<p class="text-sm text-slate-500 text-center py-4">No hay solicitudes disponibles.</p>`;
             }
+        }
+
+        // --- CÁLCULO DE OFERTA MÍNIMA VIABLE ---
+        function calcularOfertaMinimaViable() {
+            const litrosNaftaBase = 4; 
+            const litrosDepreciacion = 1.5; 
+            const precioLitroNafta = 2250; 
+            return (litrosNaftaBase + litrosDepreciacion) * precioLitroNafta; 
+        }
+
+        // --- SISTEMA DE NOTIFICACIÓN DE PRECIOS PARA COMPETENCIA ---
+        function verificarYNotificarMejoraPrecio(mudanzaId, fleteroActualId, nuevoMonto) {
+            let ofertasGlobales = JSON.parse(localStorage.getItem(`ofertas_activas_mudanza_${mudanzaId}`) || "[]");
+            
+            const indexExistente = ofertasGlobales.findIndex(o => o.fletero_id === fleteroActualId);
+            if (indexExistente >= 0) {
+                ofertasGlobales[indexExistente].monto = nuevoMonto;
+            } else {
+                ofertasGlobales.push({ fletero_id: fleteroActualId, monto: nuevoMonto });
+            }
+            localStorage.setItem(`ofertas_activas_mudanza_${mudanzaId}`, JSON.stringify(ofertasGlobales));
+
+            const ofertaMasBaja = Math.min(...ofertasGlobales.map(o => o.monto));
+
+            ofertasGlobales.forEach(o => {
+                if (o.monto > ofertaMasBaja) {
+                    let notificacionesFletero = JSON.parse(localStorage.getItem(`notificaciones_fletero_${o.fletero_id}`) || "[]");
+                    const mensajeAlerta = `📉 ¡Atención! Otro fletero mejoró el precio en la mudanza #${mudanzaId}. La oferta más baja actual es de $${ofertaMasBaja}. ¡Mejora tu precio!`;
+                    if (!notificacionesFletero.some(n => n.mensaje === mensajeAlerta)) {
+                        notificacionesFletero.push({
+                            mensaje: mensajeAlerta,
+                            fecha: new Date().toLocaleTimeString()
+                        });
+                        localStorage.setItem(`notificaciones_fletero_${o.fletero_id}`, JSON.stringify(notificacionesFletero));
+                    }
+                }
+            });
+        }
+
+        function limpiarNotificaciones() {
+            localStorage.removeItem(`notificaciones_fletero_${fleteroIdActual}`);
+            cargarDatosDashboard();
+        }
+
+        async function enviarOferta(mId) {
+            const montoInput = document.getElementById(`monto_${mId}`).value;
+            const horaModificada = document.getElementById(`hora_${mId}`).value;
+            
+            if(!montoInput) {
+                alert("Por favor ingresa un monto.");
+                return;
+            }
+
+            const monto = parseFloat(montoInput);
+            const montoMinimo = calcularOfertaMinimaViable();
+
+            if (monto < montoMinimo) {
+                alert(`⚠️ La oferta no puede ser menor a la Oferta Mínima Viable ($${montoMinimo}), la cual contempla combustible (20 km) y depreciación del vehículo.`);
+                return;
+            }
+
+            const tiempoFinal = horaModificada ? `Hora prop: ${horaModificada}` : "1.5";
+
+            let historialOfertas = JSON.parse(localStorage.getItem(`historial_ofertas_fletero_${fleteroIdActual}_mudanza_${mId}`) || "[]");
+            historialOfertas.push({
+                monto: monto,
+                tiempo: tiempoFinal,
+                fecha: new Date().toLocaleTimeString()
+            });
+            localStorage.setItem(`historial_ofertas_fletero_${fleteroIdActual}_mudanza_${mId}`, JSON.stringify(historialOfertas));
+
+            await fetch(`${API_URL}/ofertas/`, { 
+                method: "POST", 
+                headers: {"Content-Type":"application/json"}, 
+                body: JSON.stringify({
+                    mudanza_id: parseInt(mId), 
+                    fletero_id: parseInt(fleteroIdActual), 
+                    monto_oferta: monto, 
+                    tiempo_estimado: tiempoFinal
+                })
+            });
+
+            verificarYNotificarMejoraPrecio(mId, parseInt(fleteroIdActual), monto);
+
+            cargarDatosDashboard();
+        }
+
+        function marcarComoFinalizado(mudanzaId) {
+            let finalizadas = JSON.parse(localStorage.getItem(`mudanzas_finalizadas`) || "[]");
+            if (!finalizadas.includes(mudanzaId)) {
+                finalizadas.push(mudanzaId);
+                localStorage.setItem(`mudanzas_finalizadas`, JSON.stringify(finalizadas));
+            }
+            alert("¡Servicio marcado como finalizado con éxito! El dinero ha sido liberado y ya puedes calificar al cliente.");
+            cargarDatosDashboard();
+        }
+
+        function seleccionarEstrellas(mudanzaId, tipo, cantidad) {
+            document.getElementById(`val_estrellas_${tipo}_${mudanzaId}`).value = cantidad;
+            const estrellas = document.querySelectorAll(`.star-${mudanzaId}`);
+            estrellas.forEach((star, index) => {
+                if (index < cantidad) star.classList.add("text-amber-400");
+                else star.classList.remove("text-amber-400");
+            });
+        }
+
+        function enviarCalificacionFletero(mudanzaId, clienteId) {
+            const estrellas = document.getElementById(`val_estrellas_f_${mudanzaId}`).value;
+            const comentario = document.getElementById(`comentario_f_${mudanzaId}`).value;
+
+            const nuevaReseña = {
+                autor: "Fletero",
+                estrellas: parseInt(estrellas),
+                comentario: comentario || "Sin comentarios",
+                fecha: new Date().toLocaleDateString()
+            };
+
+            let reseñasCliente = JSON.parse(localStorage.getItem(`reseñas_usuario_cliente_${clienteId}`) || "[]");
+            reseñasCliente.push(nuevaReseña);
+            localStorage.setItem(`reseñas_usuario_cliente_${clienteId}`, JSON.stringify(reseñasCliente));
+            localStorage.setItem(`reseñas_mudanza_${mudanzaId}_fletero`, "true");
+
+            alert("¡Valoración enviada con éxito!");
+            cargarDatosDashboard();
+        }
+
+        async function verReseñasUsuario(tipo, id, nombre) {
+            document.getElementById("modalReseñasTitulo").innerText = `💬 Opiniones sobre ${nombre}`;
+            const lista = document.getElementById("modalReseñasLista");
+            lista.innerHTML = `<p class="text-sm text-slate-500 text-center py-4">Cargando...</p>`;
+            document.getElementById("modalReseñas").style.display = "flex";
+
+            let reseñas = JSON.parse(localStorage.getItem(`reseñas_usuario_${tipo}_${id}`) || "[]");
+
+            if (reseñas.length === 0) {
+                lista.innerHTML = `<p class="text-sm text-slate-500 text-center py-4">Este usuario aún no tiene comentarios ni valoraciones registradas.</p>`;
+                return;
+            }
+
+            lista.innerHTML = "";
+            reseñas.forEach(r => {
+                let estrellasStr = "★".repeat(r.estrellas) + "☆".repeat(5 - r.estrellas);
+                lista.innerHTML += `
+                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1 text-xs">
+                        <div class="flex justify-between font-bold text-slate-700">
+                            <span>✍️ ${r.autor}</span>
+                            <span class="text-amber-500">${estrellasStr} (${r.estrellas}.0)</span>
+                        </div>
+                        <p class="text-slate-600">"${r.comentario}"</p>
+                        <span class="text-[10px] text-slate-400 block text-right">${r.fecha}</span>
+                    </div>`;
+            });
+        }
+
+        function cerrarModalReseñas() {
+            document.getElementById("modalReseñas").style.display = "none";
         }
 
         async function aprobarTrasladoFletero(mudanzaId, ofertaId) {
@@ -442,6 +722,10 @@
             document.getElementById("perfilCbuInput").value = fletero.cbu_cvu || "";
             document.getElementById("perfilAliasInput").value = fletero.alias_bancario || "";
             document.getElementById("perfilBancoInput").value = fletero.nombre_banco || "";
+            
+            if(fletero.calificacion) {
+                document.getElementById("perfilCalificacionEstrellas").innerText = `⭐ ${fletero.calificacion} / 5.0`;
+            }
         }
 
         async function guardarPerfilFletero() {
@@ -495,28 +779,6 @@
             if (tarjeta) tarjeta.remove();
         }
 
-        async function enviarOferta(mId) {
-            const monto = document.getElementById(`monto_${mId}`).value;
-            const horaModificada = document.getElementById(`hora_${mId}`).value;
-            if(!monto) {
-                alert("Por favor ingresa un monto.");
-                return;
-            }
-            const tiempoFinal = horaModificada ? `Hora prop: ${horaModificada}` : "1.5";
-
-            await fetch(`${API_URL}/ofertas/`, { 
-                method: "POST", 
-                headers: {"Content-Type":"application/json"}, 
-                body: JSON.stringify({
-                    mudanza_id: mId, 
-                    fletero_id: parseInt(fleteroIdActual), 
-                    monto_oferta: parseFloat(monto), 
-                    tiempo_estimado: tiempoFinal
-                })
-            });
-            cargarDatosDashboard();
-        }
-
         async function cambiarEstado(oId, nuevo) {
             await fetch(`${API_URL}/ofertas/${oId}/estado?nuevo_estado=${nuevo}`, { method: "PUT" });
             cargarDatosDashboard();
@@ -547,12 +809,6 @@
         function cerrarSesion() {
             sessionStorage.clear();
             location.reload();
-        }
-
-        if(fleteroIdActual) { 
-            document.getElementById("pantallaAuth").style.display="none"; 
-            document.getElementById("pantallaDashboard").style.display="flex"; 
-            cargarDatosDashboard(); 
         }
     </script>
 </body>

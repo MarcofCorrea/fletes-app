@@ -62,10 +62,13 @@ class CobroGuardadoIn(BaseModel):
     customer_id: str
     card_id: str
 
+class CalificacionIn(BaseModel):
+    usuario_id: int
+    estrellas: float
+
 @app.post("/crear-preferencia-pago")
 def crear_preferencia(item: ItemPago, request: Request):
     try:
-        # Detectar dinámicamente si estamos en local o en Render (producción)
         base_url = str(request.base_url).rstrip("/")
         
         preference_data = {
@@ -186,9 +189,24 @@ def pagar_con_tarjeta_guardada(pago: CobroGuardadoIn):
     except Exception as e:
         return {"detail": str(e)}
 
+@app.post("/calificar-usuario")
+def calificar_usuario(data: CalificacionIn):
+    from database import SessionLocal
+    db = SessionLocal()
+    try:
+        usuario = db.query(UsuarioDB).filter(UsuarioDB.id == data.usuario_id).first()
+        if not usuario:
+            return {"detail": "Usuario no encontrado"}
+        usuario.calificacion = data.estrellas
+        db.commit()
+        return {"status": "success", "mensaje": "Calificación actualizada con éxito"}
+    except Exception as e:
+        return {"detail": str(e)}
+    finally:
+        db.close()
+
 @app.get("/api-info")
 def raiz():
     return {"mensaje": "¡Bienvenido a la API de FletesApp con verificación de pagos y soporte bancario! 🚀"}
 
-# Montar los archivos estáticos al final para que sirvan el index.html y los paneles
 app.mount("/", StaticFiles(directory=".", html=True), name="static")

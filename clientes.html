@@ -14,6 +14,7 @@
             <p class="text-xs text-blue-200">Solicita y gestiona tus mudanzas</p>
         </header>
 
+        <!-- SECCIÓN DE AUTH ACTIVA -->
         <div id="contenedorAuth" class="flex-1 flex flex-col">
             <div class="flex border-b bg-slate-50 text-sm font-semibold">
                 <button type="button" onclick="cambiarTabAuth('login')" id="btnTabLogin" class="flex-1 py-3 text-center border-b-2 border-blue-600 text-blue-600">Iniciar Sesión</button>
@@ -26,6 +27,9 @@
                         <input type="email" id="loginClienteEmail" placeholder="Correo electrónico" class="w-full p-2 border rounded-lg text-sm">
                         <input type="password" id="loginClientePassword" placeholder="Contraseña" class="w-full p-2 border rounded-lg text-sm">
                         <button type="button" onclick="ejecutarLoginCliente()" class="w-full bg-blue-600 text-white p-2 rounded-lg text-sm font-semibold">Entrar</button>
+                        
+                        <!-- ACCESO RÁPIDO DE PRUEBA -->
+                        <button type="button" onclick="accesoRapidoCliente()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white p-2 rounded-lg text-sm font-semibold shadow">🚀 Entrar como Cliente (Prueba)</button>
                     </div>
                 </div>
                 <div id="subTabCliente-registro" class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3" style="display: none;">
@@ -49,6 +53,7 @@
             </div>
         </div>
 
+        <!-- DASHBOARD (Oculto hasta hacer login) -->
         <div id="vistaDashboardCliente" class="flex-1 flex flex-col" style="display: none;">
             <div class="flex border-b bg-blue-900 text-white text-[11px] font-semibold">
                 <button type="button" onclick="cambiarTabDashboard('solicitudes')" id="navSolicitudes" class="flex-1 py-3 text-center border-b-2 border-emerald-400 text-emerald-400">Quiero mudarme</button>
@@ -86,7 +91,7 @@
                 </div>
 
                 <div id="seccionOfertas" class="space-y-4" style="display: none;">
-                    <h2 class="font-bold text-base text-slate-800">💼 Mudanza aprobada</h2>
+                    <h2 class="font-bold text-base text-slate-800">💼 Mudanza aprobada y Finalizada</h2>
                     <div id="listaOfertasCliente" class="space-y-4">
                         <p class="text-sm text-slate-500 text-center py-4">No hay ofertas recibidas aún.</p>
                     </div>
@@ -94,10 +99,14 @@
 
                 <div id="seccionPerfil" class="space-y-4" style="display: none;">
                     <div class="flex justify-between items-center border-b pb-2">
-                        <h2 class="font-bold text-base text-slate-800">👤 Mi Perfil</h2>
+                        <h2 class="font-bold text-base text-slate-800">👤 Mi Perfil y Reseñas</h2>
                         <button type="button" onclick="cerrarSesionCliente()" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-xs font-semibold">Cerrar Sesión</button>
                     </div>
                     <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3 text-sm">
+                        <div class="text-center bg-white p-3 rounded-lg border border-slate-100 shadow-sm cursor-pointer" onclick="verReseñasUsuario('cliente', clienteIdActual, 'Mi Perfil')">
+                            <span class="text-xs text-slate-500 font-semibold uppercase block">Calificación Promedio (Ver Comentarios)</span>
+                            <span id="perfilCalificacionEstrellas" class="text-amber-500 font-bold text-lg">⭐⭐⭐⭐⭐ (5.0)</span>
+                        </div>
                         <div>
                             <label class="text-slate-500 text-xs font-semibold block mb-1">NOMBRE COMPLETO</label>
                             <input type="text" id="perfilNombreInput" class="w-full p-2 border rounded-lg text-sm bg-white">
@@ -122,6 +131,19 @@
                         <div>📧 <strong>Correo:</strong> soporte@fletesapp.com</div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL PARA VER COMENTARIOS Y VALORACIONES -->
+    <div id="modalReseñas" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" style="display: none;">
+        <div class="bg-white rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl max-h-[80vh] flex flex-col">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 id="modalReseñasTitulo" class="font-bold text-base text-slate-800">💬 Comentarios y Valoraciones</h3>
+                <button onclick="cerrarModalReseñas()" class="text-slate-400 hover:text-red-500 font-bold text-lg">✕</button>
+            </div>
+            <div id="modalReseñasLista" class="overflow-y-auto space-y-3 flex-1 pr-1">
+                <p class="text-sm text-slate-500 text-center py-4">Cargando opiniones...</p>
             </div>
         </div>
     </div>
@@ -172,6 +194,31 @@
                 }
             }
         });
+
+        async function accesoRapidoCliente() {
+            try {
+                const res = await fetch(`${API_URL}/clientes/`);
+                const clientes = await res.json();
+
+                if (res.ok && clientes && clientes.length > 0) {
+                    const clientePrueba = clientes[0];
+                    clienteIdActual = clientePrueba.id;
+                    datosClienteActual = clientePrueba;
+                    
+                    sessionStorage.setItem("clienteId", clienteIdActual);
+                    sessionStorage.setItem("datosCliente", JSON.stringify(datosClienteActual));
+
+                    document.getElementById("contenedorAuth").style.display = "none";
+                    document.getElementById("vistaDashboardCliente").style.display = "flex";
+                    cargarMisMudanzas();
+                } else {
+                    alert("⚠️ No hay clientes registrados. Por favor, regístrate por primera vez desde la pestaña 'Registrarse'.");
+                }
+            } catch (e) {
+                console.error(e);
+                alert("Error de conexión con el servidor local.");
+            }
+        }
 
         function cambiarTabAuth(tab) {
             const loginDiv = document.getElementById("subTabCliente-login");
@@ -339,6 +386,7 @@
                 if (contenedorOfertas) contenedorOfertas.innerHTML = "";
 
                 const eliminadas = JSON.parse(localStorage.getItem(`cliente_eliminadas_${clienteIdActual}`) || "[]");
+                const finalizadasLocal = JSON.parse(localStorage.getItem(`mudanzas_finalizadas`) || "[]");
                 const mudanzasValidas = data ? data.filter(item => !eliminadas.includes(item.mudanza.id)) : [];
 
                 if (!mudanzasValidas || mudanzasValidas.length === 0) {
@@ -347,11 +395,13 @@
                     return;
                 }
 
+                let tieneSolicitudesActivas = false;
                 let tieneOfertasGlobal = false;
 
                 for (const item of mudanzasValidas) {
                     const m = item.mudanza;
                     const ofertas = item.ofertas;
+                    const estaFinalizada = finalizadasLocal.includes(m.id) || m.estado === 'finalizada';
 
                     let infoFechaHora = "";
                     let textoCargaReal = m.descripcion_carga;
@@ -361,84 +411,137 @@
                         textoCargaReal = m.descripcion_carga.replace(matchFecha[0], "").trim();
                     }
 
-                    const cardSol = document.createElement("div");
-                    cardSol.id = `tarjeta_sol_${m.id}`;
-                    cardSol.className = "bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2 text-sm relative";
+                    const ofertaAceptadaPorCliente = ofertas ? ofertas.find(o => o.estado === 'aceptada' || o.estado === 'aprobada') : null;
+                    const fleteroIdAsignado = ofertaAceptadaPorCliente ? ofertaAceptadaPorCliente.fletero_id : null;
+                    const aprobadasPorFleteroLocal = fleteroIdAsignado ? JSON.parse(localStorage.getItem(`fletero_aprobadas_manual_${fleteroIdAsignado}`) || "[]") : [];
                     
-                    let ofertasHtmlSol = `<p class="text-xs text-slate-400 italic">Esperando ofertas de fleteros...</p>`;
-                    if (ofertas && ofertas.length > 0) {
-                        let ofertasConNombresHtml = [];
-                        for (const o of ofertas) {
-                            let nombreFletero = `Fletero #${o.fletero_id}`;
-                            try {
-                                let resFl = await fetch(`${API_URL}/fleteros/${o.fletero_id}`);
-                                if (resFl.ok) {
-                                    const fData = await resFl.json();
-                                    nombreFletero = fData.nombre || fData.fletero?.nombre || nombreFletero;
-                                } else {
-                                    const fleteroEncontrado = listaFleteros.find(f => f.id === o.fletero_id);
-                                    if (fleteroEncontrado) nombreFletero = fleteroEncontrado.nombre;
+                    const fleteroYaAprobo = (ofertaAceptadaPorCliente && aprobadasPorFleteroLocal.includes(m.id)) || estaFinalizada;
+
+                    if (!fleteroYaAprobo) {
+                        tieneSolicitudesActivas = true;
+                        const cardSol = document.createElement("div");
+                        cardSol.id = `tarjeta_sol_${m.id}`;
+                        cardSol.className = "bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2 text-sm relative";
+                        
+                        let ofertasHtmlSol = `<p class="text-xs text-slate-400 italic">Esperando ofertas de fleteros...</p>`;
+                        if (ofertas && ofertas.length > 0) {
+                            let ofertasConNombresHtml = [];
+                            
+                            // Agrupar por fletero para mostrar la última mejor oferta y evitar duplicados
+                            const mapFleterosOfertas = {};
+                            ofertas.forEach(o => {
+                                if (!mapFleterosOfertas[o.fletero_id] || o.id > mapFleterosOfertas[o.fletero_id].id) {
+                                    mapFleterosOfertas[o.fletero_id] = o;
                                 }
-                            } catch(e) {}
+                            });
 
-                            ofertasConNombresHtml.push(`
-                                <div class="bg-white p-2 rounded border flex justify-between items-center text-xs">
-                                    <div>🚗 <strong>${nombreFletero}</strong> - <strong>$${o.monto_oferta}</strong> (${o.tiempo_estimado})</div>
-                                    ${o.estado === 'aceptada' ? 
-                                        '<span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-semibold">Aceptada</span>' : 
-                                        `<button type="button" onclick="aceptarOferta(${o.id})" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2 py-1 rounded font-semibold">Aceptar Oferta</button>`
+                            for (const fleteroIdStr in mapFleterosOfertas) {
+                                const o = mapFleterosOfertas[fleteroIdStr];
+                                let nombreFletero = `Fletero #${o.fletero_id}`;
+                                let vehiculoFletero = "No especificado";
+                                let patenteFletero = "S/D";
+                                let estrellasFletero = "⭐⭐⭐⭐⭐ (5.0)";
+
+                                try {
+                                    let resFl = await fetch(`${API_URL}/fleteros/${o.fletero_id}`);
+                                    if (resFl.ok) {
+                                        const fData = await resFl.json();
+                                        const fletero = fData.fletero || fData;
+                                        nombreFletero = fletero.nombre || nombreFletero;
+                                        vehiculoFletero = fletero.vehiculo || "Vehículo estándar";
+                                        patenteFletero = fletero.patente || "S/D";
+                                        if(fletero.calificacion) {
+                                            estrellasFletero = `⭐ ${fletero.calificacion}`;
+                                        }
+                                    } else {
+                                        const fleteroEncontrado = listaFleteros.find(f => f.id === o.fletero_id);
+                                        if (fleteroEncontrado) {
+                                            nombreFletero = fleteroEncontrado.nombre;
+                                            vehiculoFletero = fleteroEncontrado.vehiculo || "Vehículo estándar";
+                                            patenteFletero = fleteroEncontrado.patente || "S/D";
+                                        }
                                     }
-                                </div>
-                            `);
+                                } catch(e) {}
+
+                                let esEstaAceptada = o.estado === 'aceptada' || o.estado === 'aprobada';
+
+                                ofertasConNombresHtml.push(`
+                                    <div class="bg-white p-2.5 rounded-lg border border-slate-200 space-y-1.5 text-xs shadow-sm">
+                                        <div class="flex justify-between items-start">
+                                            <div>
+                                                <div class="font-bold text-slate-800 text-sm">🚗 ${nombreFletero}</div>
+                                                <div class="text-slate-600">🚙 <strong>Vehículo:</strong> ${vehiculoFletero}</div>
+                                                <div class="text-slate-600">🏷️ <strong>Patente:</strong> <span class="font-mono bg-slate-100 px-1 py-0.5 rounded">${patenteFletero}</span></div>
+                                                <div class="text-amber-500 font-semibold mt-0.5 cursor-pointer" onclick="verReseñasUsuario('fletero', ${o.fletero_id}, '${nombreFletero}')">Calificación: ${estrellasFletero}</div>
+                                            </div>
+                                            <div class="text-right">
+                                                <span class="text-emerald-700 font-extrabold text-sm block">$${o.monto_oferta}</span>
+                                                <span class="text-[10px] text-slate-400">⏱️ ${o.tiempo_estimado || ''}</span>
+                                            </div>
+                                        </div>
+                                        <div class="pt-1.5 border-t flex justify-end">
+                                            ${esEstaAceptada ? 
+                                                '<span class="bg-amber-100 text-amber-800 px-2.5 py-1 rounded font-bold text-xs">⏳ Pre-aprobada, esperando confirmación del fletero</span>' : 
+                                                `<button type="button" onclick="aceptarOferta(${o.id})" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded font-semibold">Aceptar Oferta</button>`
+                                            }
+                                        </div>
+                                    </div>
+                                `);
+                            }
+                            ofertasHtmlSol = ofertasConNombresHtml.join('');
                         }
-                        ofertasHtmlSol = ofertasConNombresHtml.join('');
+
+                        cardSol.innerHTML = `
+                            <button onclick="eliminarTarjeta(${m.id})" class="absolute top-3 right-3 text-slate-400 hover:text-red-500 text-xs font-bold px-1.5 py-0.5 rounded border border-emerald-200 bg-white" title="Ocultar tarjeta">✕</button>
+                            <div class="font-bold text-slate-800 pr-6">Mudanza #${m.id} - ${textoCargaReal}</div>
+                            <div class="text-xs text-slate-600"><strong>De:</strong> ${m.origen_direccion}</div>
+                            <div class="text-xs text-slate-600"><strong>A:</strong> ${m.destino_direccion}</div>
+                            ${infoFechaHora ? `<div class="text-xs text-blue-700 font-semibold">📅 Programada: ${infoFechaHora}</div>` : ''}
+                            <div class="border-t pt-2 space-y-1">
+                                <span class="text-xs font-semibold text-slate-700 block">Estado / Propuestas de Fleteros:</span>
+                                ${ofertasHtmlSol}
+                            </div>
+                        `;
+                        contenedorSolicitudes.appendChild(cardSol);
                     }
 
-                    if (m.estado === "en_curso") {
-                        ofertasHtmlSol = `<span class="bg-emerald-200 text-emerald-800 px-2 py-0.5 rounded text-xs font-semibold inline-block">Viaje en Curso / Aprobado</span>`;
-                    }
-
-                    cardSol.innerHTML = `
-                        <button onclick="eliminarTarjeta(${m.id})" class="absolute top-3 right-3 text-slate-400 hover:text-red-500 text-xs font-bold px-1.5 py-0.5 rounded border border-emerald-200 bg-white" title="Ocultar tarjeta">✕</button>
-                        <div class="font-bold text-slate-800 pr-6">Mudanza #${m.id} - ${textoCargaReal}</div>
-                        <div class="text-xs text-slate-600"><strong>De:</strong> ${m.origen_direccion}</div>
-                        <div class="text-xs text-slate-600"><strong>A:</strong> ${m.destino_direccion}</div>
-                        ${infoFechaHora ? `<div class="text-xs text-blue-700 font-semibold">📅 Programada: ${infoFechaHora}</div>` : ''}
-                        <div class="border-t pt-2 space-y-1">
-                            <span class="text-xs font-semibold text-slate-700 block">Estado / Propuestas:</span>
-                            ${ofertasHtmlSol}
-                        </div>
-                    `;
-                    contenedorSolicitudes.appendChild(cardSol);
-
-                    const ofertasAceptadas = ofertas ? ofertas.filter(o => o.estado === 'aceptada' || o.estado === 'aprobada' || m.estado === 'en_curso') : [];
-                    if (ofertasAceptadas.length > 0 || m.estado === 'en_curso') {
+                    if (fleteroYaAprobo) {
                         tieneOfertasGlobal = true;
                         
                         const ofertaGanadora = todasOfertas.find(o => o.mudanza_id == m.id && (o.estado === 'aceptada' || o.estado === 'aprobada'));
                         const montoAcordado = ofertaGanadora ? ofertaGanadora.monto_oferta : 0;
-                        const fleteroIdGanador = ofertaGanadora ? ofertaGanadora.fletero_id : null;
+                        const fleteroIdGanador = ofertaGanadora ? ofertaGanadora.fletero_id : fleteroIdAsignado;
 
                         let nombreFleteroGanador = "Fletero Asignado";
                         let telefonoFleteroGanador = "";
+                        let vehiculoGanador = "";
+                        let patenteGanadora = "";
+                        let calificacionFleteroNum = 5.0;
+
                         if (fleteroIdGanador) {
                             try {
                                 let resFl = await fetch(`${API_URL}/fleteros/${fleteroIdGanador}`);
                                 if (resFl.ok) {
                                     const fData = await resFl.json();
-                                    nombreFleteroGanador = fData.nombre || fData.fletero?.nombre || nombreFleteroGanador;
-                                    telefonoFleteroGanador = fData.telefono || fData.fletero?.telefono || "";
+                                    const fOb = fData.fletero || fData;
+                                    nombreFleteroGanador = fOb.nombre || nombreFleteroGanador;
+                                    telefonoFleteroGanador = fOb.telefono || "";
+                                    vehiculoGanador = fOb.vehiculo || "";
+                                    patenteGanadora = fOb.patente || "";
+                                    if (fOb.calificacion) calificacionFleteroNum = fOb.calificacion;
                                 } else {
                                     const fleteroEncontrado = listaFleteros.find(f => f.id === fleteroIdGanador);
                                     if (fleteroEncontrado) {
                                         nombreFleteroGanador = fleteroEncontrado.nombre;
                                         telefonoFleteroGanador = fleteroEncontrado.telefono || "";
+                                        vehiculoGanador = fleteroEncontrado.vehiculo || "";
+                                        patenteGanadora = fleteroEncontrado.patente || "";
                                     }
                                 }
                             } catch(e) {}
                         }
 
-                        const estaPagado = m.estado_pago === "pagado";
+                        const estaPagado = m.estado_pago === "pagado" || estaFinalizada;
 
                         let contactoFleteroHtml = `<span class="text-amber-700 italic">🔒 Se desbloqueará al abonar el servicio</span>`;
                         if (estaPagado) {
@@ -447,10 +550,29 @@
                             contactoFleteroHtml = `<a href="${enlaceWsp}" target="_blank" class="text-emerald-700 font-bold underline flex items-center gap-1">💬 Abrir WhatsApp (${telefonoFleteroGanador || 'Disponible'})</a>`;
                         }
 
-                        const cardOf = document.createElement("div");
-                        cardOf.id = `tarjeta_of_${m.id}`;
-                        cardOf.className = "bg-emerald-50 p-3 rounded-xl border border-emerald-200 space-y-2 text-sm relative";
-                        
+                        let seccionCalificacionHtml = "";
+                        if (estaFinalizada) {
+                            const yaCalifico = localStorage.getItem(`reseñas_mudanza_${m.id}_cliente`);
+                            if (yaCalifico) {
+                                seccionCalificacionHtml = `<div class="bg-white p-2 rounded border text-xs text-emerald-700 font-semibold mt-2">✅ Ya valoraste a este fletero.</div>`;
+                            } else {
+                                seccionCalificacionHtml = `
+                                    <div class="bg-white p-3 rounded-lg border border-amber-200 space-y-2 mt-2 text-xs">
+                                        <div class="font-bold text-slate-700">⭐ Valora al Fletero (${nombreFleteroGanador}):</div>
+                                        <div class="flex gap-1" id="estrellas_c_${m.id}">
+                                            <span onclick="seleccionarEstrellasC(${m.id}, 1)" class="cursor-pointer text-slate-300 text-lg hover:text-amber-400 star-c-${m.id}">★</span>
+                                            <span onclick="seleccionarEstrellasC(${m.id}, 2)" class="cursor-pointer text-slate-300 text-lg hover:text-amber-400 star-c-${m.id}">★</span>
+                                            <span onclick="seleccionarEstrellasC(${m.id}, 3)" class="cursor-pointer text-slate-300 text-lg hover:text-amber-400 star-c-${m.id}">★</span>
+                                            <span onclick="seleccionarEstrellasC(${m.id}, 4)" class="cursor-pointer text-slate-300 text-lg hover:text-amber-400 star-c-${m.id}">★</span>
+                                            <span onclick="seleccionarEstrellasC(${m.id}, 5)" class="cursor-pointer text-slate-300 text-lg hover:text-amber-400 star-c-${m.id}">★</span>
+                                        </div>
+                                        <input type="hidden" id="val_estrellas_c_${m.id}" value="5">
+                                        <textarea id="comentario_c_${m.id}" placeholder="¿Cómo fue tu experiencia con el fletero?" class="w-full p-1.5 border rounded text-xs bg-slate-50"></textarea>
+                                        <button onclick="enviarCalificacionCliente(${m.id}, ${fleteroIdGanador})" class="w-full bg-emerald-600 text-white py-1.5 rounded font-semibold">Enviar Valoración</button>
+                                    </div>`;
+                            }
+                        }
+
                         let seccionPagoHtml = `
                             <div class="bg-white p-2.5 rounded-lg border border-emerald-100 space-y-2 mt-2 text-xs">
                                 <div class="flex justify-between items-center font-bold text-slate-700">
@@ -467,23 +589,34 @@
                                 }
                             </div>`;
 
+                        const cardOf = document.createElement("div");
+                        cardOf.id = `tarjeta_of_${m.id}`;
+                        cardOf.className = "bg-emerald-50 p-3 rounded-xl border border-emerald-200 space-y-2 text-sm relative";
                         cardOf.innerHTML = `
                             <button onclick="eliminarTarjeta(${m.id})" class="absolute top-3 right-3 text-slate-400 hover:text-red-500 text-xs font-bold px-1.5 py-0.5 rounded border border-emerald-200 bg-white" title="Ocultar tarjeta">✕</button>
-                            <div class="font-bold text-emerald-900 pr-6">🚀 Mudanza Aprobada #${m.id}</div>
+                            <div class="font-bold text-emerald-900 pr-6">🚀 Mudanza Aprobada #${m.id} ${estaFinalizada ? '(Finalizada)' : ''}</div>
                             <div class="bg-white p-2.5 rounded-lg border border-emerald-100 space-y-1 text-xs">
                                 <div class="text-slate-500 font-semibold uppercase text-[10px]">Fletero Asignado</div>
-                                <div>🚗 <strong>Nombre:</strong> ${nombreFleteroGanador}</div>
+                                <div>🚗 <strong>Nombre:</strong> <span onclick="verReseñasUsuario('fletero', ${fleteroIdGanador}, '${nombreFleteroGanador}')" class="text-blue-600 underline cursor-pointer font-bold">${nombreFleteroGanador}</span></div>
+                                <div class="text-amber-500 font-semibold cursor-pointer" onclick="verReseñasUsuario('fletero', ${fleteroIdGanador}, '${nombreFleteroGanador}')">⭐ ${calificacionFleteroNum} (Ver Comentarios)</div>
+                                <div>🚙 <strong>Vehículo:</strong> ${vehiculoGanador || 'No especificado'}</div>
+                                <div>🏷️ <strong>Patente:</strong> <span class="font-mono bg-slate-100 px-1 py-0.5 rounded">${patenteGanadora || 'S/D'}</span></div>
                                 <div>📞 <strong>Teléfono:</strong> ${contactoFleteroHtml}</div>
                             </div>
                             <div class="text-xs text-slate-600"><strong>Carga:</strong> ${textoCargaReal}</div>
                             <div class="text-xs text-slate-600"><strong>Ruta:</strong> ${m.origen_direccion} ➔ ${m.destino_direccion}</div>
                             ${infoFechaHora ? `<div class="text-xs text-emerald-800 font-bold">📅 Programada: ${infoFechaHora}</div>` : ''}
                             ${seccionPagoHtml}
+                            ${!estaFinalizada ? `<button onclick="marcarComoFinalizadoCliente(${m.id})" class="w-full bg-blue-600 text-white py-1.5 rounded text-xs font-semibold mt-1">🏁 Confirmar Finalización de Mudanza</button>` : ''}
+                            ${seccionCalificacionHtml}
                         `;
                         contenedorOfertas.appendChild(cardOf);
                     }
                 }
 
+                if (!tieneSolicitudesActivas && contenedorSolicitudes) {
+                    contenedorSolicitudes.innerHTML = `<p class="text-sm text-slate-500 text-center py-4">No hay solicitudes activas o pendientes.</p>`;
+                }
                 if (!tieneOfertasGlobal && contenedorOfertas) {
                     contenedorOfertas.innerHTML = `<p class="text-sm text-slate-500 text-center py-4">No hay mudanzas aprobadas en este momento.</p>`;
                 }
@@ -491,6 +624,77 @@
             } catch (err) {
                 console.error(err);
             }
+        }
+
+        function marcarComoFinalizadoCliente(mudanzaId) {
+            let finalizadas = JSON.parse(localStorage.getItem(`mudanzas_finalizadas`) || "[]");
+            if (!finalizadas.includes(mudanzaId)) {
+                finalizadas.push(mudanzaId);
+                localStorage.setItem(`mudanzas_finalizadas`, JSON.stringify(finalizadas));
+            }
+            alert("¡Mudanza marcada como finalizada! Ya puedes calificar al fletero.");
+            cargarMisMudanzas();
+        }
+
+        function seleccionarEstrellasC(mudanzaId, cantidad) {
+            document.getElementById(`val_estrellas_c_${mudanzaId}`).value = cantidad;
+            const estrellas = document.querySelectorAll(`.star-c-${mudanzaId}`);
+            estrellas.forEach((star, index) => {
+                if (index < cantidad) star.classList.add("text-amber-400");
+                else star.classList.remove("text-amber-400");
+            });
+        }
+
+        function enviarCalificacionCliente(mudanzaId, fleteroId) {
+            const estrellas = document.getElementById(`val_estrellas_c_${mudanzaId}`).value;
+            const comentario = document.getElementById(`comentario_c_${mudanzaId}`).value;
+
+            const nuevaReseña = {
+                autor: "Cliente",
+                estrellas: parseInt(estrellas),
+                comentario: comentario || "Sin comentarios",
+                fecha: new Date().toLocaleDateString()
+            };
+
+            let reseñasFletero = JSON.parse(localStorage.getItem(`reseñas_usuario_fletero_${fleteroId}`) || "[]");
+            reseñasFletero.push(nuevaReseña);
+            localStorage.setItem(`reseñas_usuario_fletero_${fleteroId}`, JSON.stringify(reseñasFletero));
+            localStorage.setItem(`reseñas_mudanza_${mudanzaId}_cliente`, "true");
+
+            alert("¡Valoración enviada con éxito!");
+            cargarMisMudanzas();
+        }
+
+        async function verReseñasUsuario(tipo, id, nombre) {
+            document.getElementById("modalReseñasTitulo").innerText = `💬 Opiniones sobre ${nombre}`;
+            const lista = document.getElementById("modalReseñasLista");
+            lista.innerHTML = `<p class="text-sm text-slate-500 text-center py-4">Cargando...</p>`;
+            document.getElementById("modalReseñas").style.display = "flex";
+
+            let reseñas = JSON.parse(localStorage.getItem(`reseñas_usuario_${tipo}_${id}`) || "[]");
+
+            if (reseñas.length === 0) {
+                lista.innerHTML = `<p class="text-sm text-slate-500 text-center py-4">Este usuario aún no tiene comentarios ni valoraciones registradas.</p>`;
+                return;
+            }
+
+            lista.innerHTML = "";
+            reseñas.forEach(r => {
+                let estrellasStr = "★".repeat(r.estrellas) + "☆".repeat(5 - r.estrellas);
+                lista.innerHTML += `
+                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1 text-xs">
+                        <div class="flex justify-between font-bold text-slate-700">
+                            <span>✍️ ${r.autor}</span>
+                            <span class="text-amber-500">${estrellasStr} (${r.estrellas}.0)</span>
+                        </div>
+                        <p class="text-slate-600">"${r.comentario}"</p>
+                        <span class="text-[10px] text-slate-400 block text-right">${r.fecha}</span>
+                    </div>`;
+            });
+        }
+
+        function cerrarModalReseñas() {
+            document.getElementById("modalReseñas").style.display = "none";
         }
 
         async function pagarConCheckoutPro(mudanzaId, monto, descripcion) {
@@ -551,7 +755,7 @@
                 });
                 const result = await res.json();
                 if (res.ok) {
-                    alert("¡Has aceptado la oferta! La mudanza pasó a Mudanza aprobada.");
+                    alert("¡Has aceptado la oferta! La solicitud quedó Pre-aprobada en tu panel principal hasta que el fletero confirme la aprobación.");
                     cargarMisMudanzas();
                 } else {
                     alert("Error al aceptar la oferta: " + (result.detail || "Intente nuevamente"));
