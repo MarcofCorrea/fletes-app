@@ -25,9 +25,11 @@ try:
 except Exception:
     pass
 
+# Se agrega redirect_slashes=False para evitar errores 405 o redirecciones automáticas fallidas en POST/GET
 app = FastAPI(
     title="FletesApp API",
-    version="1.0.0"
+    version="1.0.0",
+    redirect_slashes=False
 )
 
 app.add_middleware(
@@ -38,7 +40,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Corrección de prefijos para evitar errores 404 en las peticiones del frontend
 app.include_router(clientes.router, prefix="/clientes")
 app.include_router(fleteros.router, prefix="/fleteros")
 app.include_router(mudanzas.router, prefix="/mudanzas")
