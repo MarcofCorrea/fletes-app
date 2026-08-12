@@ -8,6 +8,8 @@ import mercadopago
 from pydantic import BaseModel
 from typing import Optional
 from sqlalchemy import text
+from routers import pago
+
 
 Base.metadata.create_all(bind=engine)
 
@@ -54,6 +56,7 @@ app.include_router(clientes.router, prefix="/clientes")
 app.include_router(fleteros.router, prefix="/fleteros")
 app.include_router(mudanzas.router, prefix="/mudanzas")
 app.include_router(ofertas.router, prefix="/ofertas")
+app.include_router(pago.router)
 
 sdk = mercadopago.SDK("APP_USR-2370906297861152-081112-44bd34ccbf6c5ca4a15f26712bee3918-3609276874")
 
