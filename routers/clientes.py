@@ -6,7 +6,8 @@ from schemas import ClienteCreate, LoginRequest
 
 router = APIRouter(tags=["Clientes"])
 
-@router.post("/clientes/", status_code=status.HTTP_201_CREATED)
+@router.post("", status_code=status.HTTP_201_CREATED)
+@router.post("/", status_code=status.HTTP_201_CREATED)
 def registrar_cliente(cliente: ClienteCreate, db: Session = Depends(get_db)):
     existente = db.query(UsuarioDB).filter(UsuarioDB.email == cliente.email).first()
     if existente:
