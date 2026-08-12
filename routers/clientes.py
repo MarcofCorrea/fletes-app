@@ -27,7 +27,8 @@ def registrar_cliente(cliente: ClienteCreate, db: Session = Depends(get_db)):
     db.refresh(nuevo)
     return {"mensaje": "Cliente registrado con éxito", "cliente": {"id": nuevo.id, "nombre": nuevo.nombre}}
 
-@router.post("/clientes/login")
+@router.post("/login")
+@router.post("/login/")
 def login_cliente(credenciales: LoginRequest, db: Session = Depends(get_db)):
     cliente = db.query(UsuarioDB).filter(
         UsuarioDB.email == credenciales.email,
@@ -37,7 +38,8 @@ def login_cliente(credenciales: LoginRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Correo o contraseña incorrectos")
     return {"mensaje": "Login exitoso", "cliente": {"id": cliente.id, "nombre": cliente.nombre}}
 
-@router.get("/cliente/{cliente_id}/mudanzas")
+@router.get("/{cliente_id}/mudanzas")
+@router.get("/{cliente_id}/mudanzas/")
 def obtener_mudanzas_cliente(cliente_id: int, db: Session = Depends(get_db)):
     from models import MudanzaDB, OfertaDB
     mudanzas = db.query(MudanzaDB).filter(MudanzaDB.cliente_id == cliente_id).all()
