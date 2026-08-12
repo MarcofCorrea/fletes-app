@@ -6,6 +6,7 @@ from schemas import MudanzaCreate
 
 router = APIRouter(tags=["Mudanzas"])
 
+@router.post("", status_code=status.HTTP_201_CREATED)
 @router.post("/", status_code=status.HTTP_201_CREATED)
 def crear_mudanza(mudanza: MudanzaCreate, db: Session = Depends(get_db)):
     cliente = db.query(UsuarioDB).filter(UsuarioDB.id == mudanza.cliente_id).first()
@@ -25,6 +26,7 @@ def crear_mudanza(mudanza: MudanzaCreate, db: Session = Depends(get_db)):
     db.refresh(nueva_mudanza)
     return {"mensaje": "Mudanza publicada con éxito", "mudanza": nueva_mudanza}
 
-@router.get("/")
-def listar_mudanzas(db: Session = Depends(get_db)):
-    return db.query(MudanzaDB).all()
+@router.get("/cliente/{cliente_id}")
+def listar_mudanzas_por_cliente(cliente_id: int, db: Session = Depends(get_db)):
+    mudanzas = db.query(MudanzaDB).filter(MudanzaDB.cliente_id == cliente_id).all()
+    return mudanzas

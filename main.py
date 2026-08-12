@@ -29,7 +29,7 @@ except Exception:
 app = FastAPI(
     title="FletesApp API",
     version="1.0.0",
-    redirect_slashes=False
+    
 )
 
 app.add_middleware(
