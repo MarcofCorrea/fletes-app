@@ -50,7 +50,79 @@
         </div>
 
         <div id="vistaDashboardCliente" class="flex-1 flex flex-col" style="display: none;">
-            <!-- [Dashboard omitido por brevedad, usa tu código actual] -->
+            <div class="flex border-b bg-blue-900 text-white text-[11px] font-semibold">
+                <button type="button" onclick="cambiarTabDashboard('solicitudes')" id="navSolicitudes" class="flex-1 py-3 text-center border-b-2 border-emerald-400 text-emerald-400">Quiero mudarme</button>
+                <button type="button" onclick="cambiarTabDashboard('ofertas')" id="navOfertas" class="flex-1 py-3 text-center text-blue-200">Mudanza aprobada</button>
+                <button type="button" onclick="cambiarTabDashboard('perfil')" id="navPerfil" class="flex-1 py-3 text-center text-blue-200">Perfil</button>
+                <button type="button" onclick="cambiarTabDashboard('soporte')" id="navSoporte" class="flex-1 py-3 text-center text-blue-200">Soporte</button>
+            </div>
+            <div class="p-4 flex-1 overflow-y-auto space-y-6">
+                <div id="seccionSolicitudes" class="space-y-6">
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+                        <h2 class="font-bold text-base text-slate-800">🚚 Publicar Nueva Mudanza</h2>
+                        <div class="space-y-3">
+                            <input type="text" id="origenDir" placeholder="Dirección de Origen" class="w-full p-2 border rounded-lg text-sm bg-white">
+                            <input type="text" id="destinoDir" placeholder="Dirección de Destino" class="w-full p-2 border rounded-lg text-sm bg-white">
+                            <textarea id="descripcionCarga" placeholder="¿Qué necesitas trasladar? (Ej: Heladera, camas, cajas...)" rows="3" class="w-full p-2 border rounded-lg text-sm bg-white"></textarea>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="text-[11px] font-semibold text-slate-600 block mb-1">Fecha de mudanza:</label>
+                                    <input type="date" id="fechaMudanza" class="w-full p-2 border rounded-lg text-sm bg-white">
+                                </div>
+                                <div>
+                                    <label class="text-[11px] font-semibold text-slate-600 block mb-1">Horario:</label>
+                                    <input type="time" id="horaMudanza" class="w-full p-2 border rounded-lg text-sm bg-white">
+                                </div>
+                            </div>
+                            <button type="button" onclick="publicarMudanza()" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-lg text-sm font-semibold">Publicar Solicitud</button>
+                        </div>
+                    </div>
+                    <div class="space-y-3">
+                        <h2 class="font-bold text-base text-slate-800">📋 Mis Mudanzas Publicadas</h2>
+                        <div id="listaMisMudanzas" class="space-y-4">
+                            <p class="text-sm text-slate-500 text-center py-4">Cargando tus solicitudes...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="seccionOfertas" class="space-y-4" style="display: none;">
+                    <h2 class="font-bold text-base text-slate-800">💼 Mudanza aprobada</h2>
+                    <div id="listaOfertasCliente" class="space-y-4">
+                        <p class="text-sm text-slate-500 text-center py-4">No hay ofertas recibidas aún.</p>
+                    </div>
+                </div>
+
+                <div id="seccionPerfil" class="space-y-4" style="display: none;">
+                    <div class="flex justify-between items-center border-b pb-2">
+                        <h2 class="font-bold text-base text-slate-800">👤 Mi Perfil</h2>
+                        <button type="button" onclick="cerrarSesionCliente()" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-xs font-semibold">Cerrar Sesión</button>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3 text-sm">
+                        <div>
+                            <label class="text-slate-500 text-xs font-semibold block mb-1">NOMBRE COMPLETO</label>
+                            <input type="text" id="perfilNombreInput" class="w-full p-2 border rounded-lg text-sm bg-white">
+                        </div>
+                        <div>
+                            <label class="text-slate-500 text-xs font-semibold block mb-1">CORREO ELECTRÓNICO</label>
+                            <input type="email" id="perfilEmailInput" class="w-full p-2 border rounded-lg text-sm bg-white">
+                        </div>
+                        <div>
+                            <label class="text-slate-500 text-xs font-semibold block mb-1">TELÉFONO</label>
+                            <input type="text" id="perfilTelefonoInput" class="w-full p-2 border rounded-lg text-sm bg-white">
+                        </div>
+                        <button type="button" onclick="guardarPerfilCliente()" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-lg text-sm font-semibold mt-2">Guardar Cambios</button>
+                    </div>
+                </div>
+
+                <div id="seccionSoporte" class="space-y-4" style="display: none;">
+                    <h2 class="font-bold text-base text-slate-800">📞 Soporte Técnico</h2>
+                    <p class="text-sm text-slate-500">Comunícate con la administración ante cualquier inconveniente con tus mudanzas.</p>
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-sm space-y-2">
+                        <div>💬 <strong>WhatsApp de Soporte:</strong> +54 9 351 123-4567</div>
+                        <div>📧 <strong>Correo:</strong> soporte@fletesapp.com</div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -61,7 +133,503 @@
 
         let clienteIdActual = null;
         let datosClienteActual = null;
-        // ... (resto de tus funciones JS)
+
+        window.addEventListener("DOMContentLoaded", async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const pagoExitoso = urlParams.get("pago_exitoso");
+            const statusMp = urlParams.get("status");
+            const collectionStatus = urlParams.get("collection_status");
+            const mId = urlParams.get("mudanza_id") || urlParams.get("external_reference");
+
+            if (pagoExitoso === "true" || statusMp === "approved" || collectionStatus === "approved") {
+                if (mId) {
+                    try {
+                        const res = await fetch(`${API_URL}/verificar-pago/${mId}`);
+                        if (res.ok) {
+                            console.log("Pago verificado exitosamente para la mudanza:", mId);
+                        }
+                    } catch (e) {
+                        console.error("Error al verificar pago en servidor", e);
+                    }
+                }
+                window.history.replaceState({}, document.title, window.location.pathname);
+                sessionStorage.setItem("abrir_seccion_ofertas", "true");
+            }
+
+            const savedId = sessionStorage.getItem("clienteId");
+            const savedData = sessionStorage.getItem("datosCliente");
+            if (savedId && savedData) {
+                clienteIdActual = parseInt(savedId);
+                datosClienteActual = JSON.parse(savedData);
+                document.getElementById("contenedorAuth").style.display = "none";
+                document.getElementById("vistaDashboardCliente").style.display = "flex";
+                
+                if (sessionStorage.getItem("abrir_seccion_ofertas") === "true") {
+                    sessionStorage.removeItem("abrir_seccion_ofertas");
+                    cambiarTabDashboard('ofertas');
+                } else {
+                    cargarMisMudanzas();
+                }
+            }
+        });
+
+        function cambiarTabAuth(tab) {
+            const loginDiv = document.getElementById("subTabCliente-login");
+            const regDiv = document.getElementById("subTabCliente-registro");
+            const btnLogin = document.getElementById("btnTabLogin");
+            const btnReg = document.getElementById("btnTabRegistro");
+
+            if (tab === 'login') {
+                loginDiv.style.display = "block";
+                regDiv.style.display = "none";
+                btnLogin.classList.add("border-blue-600", "text-blue-600");
+                btnLogin.classList.remove("text-slate-500");
+                btnReg.classList.remove("border-blue-600", "text-blue-600");
+                btnReg.classList.add("text-slate-500");
+            } else {
+                regDiv.style.display = "block";
+                loginDiv.style.display = "none";
+                btnReg.classList.add("border-blue-600", "text-blue-600");
+                btnReg.classList.remove("text-slate-500");
+                btnLogin.classList.remove("border-blue-600", "text-blue-600");
+                btnLogin.classList.add("text-slate-500");
+            }
+        }
+
+        function cambiarTabDashboard(seccion) {
+            const secSolicitudes = document.getElementById("seccionSolicitudes");
+            const secOfertas = document.getElementById("seccionOfertas");
+            const secPerfil = document.getElementById("seccionPerfil");
+            const secSoporte = document.getElementById("seccionSoporte");
+
+            const navSol = document.getElementById("navSolicitudes");
+            const navOf = document.getElementById("navOfertas");
+            const navPer = document.getElementById("navPerfil");
+            const navSop = document.getElementById("navSoporte");
+
+            secSolicitudes.style.display = "none";
+            secOfertas.style.display = "none";
+            secPerfil.style.display = "none";
+            secSoporte.style.display = "none";
+
+            [navSol, navOf, navPer, navSop].forEach(el => {
+                el.classList.remove("border-b-2", "border-emerald-400", "text-emerald-400");
+                el.classList.add("text-blue-200");
+            });
+
+            if (seccion === 'solicitudes') {
+                secSolicitudes.style.display = "block";
+                navSol.classList.add("border-b-2", "border-emerald-400", "text-emerald-400");
+                navSol.classList.remove("text-blue-200");
+                cargarMisMudanzas();
+            } else if (seccion === 'ofertas') {
+                secOfertas.style.display = "block";
+                navOf.classList.add("border-b-2", "border-emerald-400", "text-emerald-400");
+                navOf.classList.remove("text-blue-200");
+                cargarMisMudanzas();
+            } else if (seccion === 'perfil') {
+                secPerfil.style.display = "block";
+                navPer.classList.add("border-b-2", "border-emerald-400", "text-emerald-400");
+                navPer.classList.remove("text-blue-200");
+                mostrarDatosPerfil();
+            } else if (seccion === 'soporte') {
+                secSoporte.style.display = "block";
+                navSop.classList.add("border-b-2", "border-emerald-400", "text-emerald-400");
+                navSop.classList.remove("text-blue-200");
+            }
+        }
+
+        const convertirArchivoABase64 = (file) => {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        };
+
+        async function ejecutarLoginCliente() {
+            const email = document.getElementById("loginClienteEmail").value;
+            const password = document.getElementById("loginClientePassword").value;
+
+            if (!email || !password) {
+                alert("Por favor completa el correo y la contraseña.");
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_URL}/clientes/login`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email, password })
+                });
+                const result = await res.json();
+                if (res.ok) {
+                    clienteIdActual = result.cliente.id;
+                    datosClienteActual = result.cliente;
+                    sessionStorage.setItem("clienteId", clienteIdActual);
+                    sessionStorage.setItem("datosCliente", JSON.stringify(datosClienteActual));
+
+                    document.getElementById("contenedorAuth").style.display = "none";
+                    document.getElementById("vistaDashboardCliente").style.display = "flex";
+                    cargarMisMudanzas();
+                } else {
+                    alert("Error: " + (result.detail || "Datos incorrectos"));
+                }
+            } catch (err) { alert("Error de conexión con el servidor"); }
+        }
+
+        async function publicarMudanza() {
+            const origen = document.getElementById("origenDir").value;
+            const destino = document.getElementById("destinoDir").value;
+            const descripcion = document.getElementById("descripcionCarga").value;
+            const fecha = document.getElementById("fechaMudanza").value;
+            const hora = document.getElementById("horaMudanza").value;
+
+            if (!origen || !destino || !descripcion || !fecha || !hora) {
+                alert("Por favor completa todos los campos, incluyendo fecha y horario.");
+                return;
+            }
+
+            const data = {
+                cliente_id: clienteIdActual,
+                origen_direccion: origen,
+                destino_direccion: destino,
+                descripcion_carga: `${descripcion} [Fecha: ${fecha} - ${hora}]`
+            };
+
+            try {
+                const res = await fetch(`${API_URL}/mudanzas/`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(data)
+                });
+                const result = await res.json();
+                if (res.ok) {
+                    alert("¡Mudanza publicada con éxito!");
+                    document.getElementById("origenDir").value = "";
+                    document.getElementById("destinoDir").value = "";
+                    document.getElementById("descripcionCarga").value = "";
+                    document.getElementById("fechaMudanza").value = "";
+                    document.getElementById("horaMudanza").value = "";
+                    cargarMisMudanzas();
+                } else {
+                    alert("Error al publicar mudanza");
+                }
+            } catch (err) {
+                alert("Error de conexión con el servidor");
+            }
+        }
+
+        async function cargarMisMudanzas() {
+            try {
+                const [resM, resO, resF] = await Promise.all([
+                    fetch(`${API_URL}/cliente/${clienteIdActual}/mudanzas`),
+                    fetch(`${API_URL}/ofertas/`),
+                    fetch(`${API_URL}/fleteros/`)
+                ]);
+                const data = await resM.json();
+                const todasOfertas = await resO.json();
+                const listaFleteros = await resF.json().catch(() => []);
+                
+                const contenedorSolicitudes = document.getElementById("listaMisMudanzas");
+                const contenedorOfertas = document.getElementById("listaOfertasCliente");
+                
+                if (contenedorSolicitudes) contenedorSolicitudes.innerHTML = "";
+                if (contenedorOfertas) contenedorOfertas.innerHTML = "";
+
+                const eliminadas = JSON.parse(localStorage.getItem(`cliente_eliminadas_${clienteIdActual}`) || "[]");
+                const mudanzasValidas = data ? data.filter(item => !eliminadas.includes(item.mudanza.id)) : [];
+
+                if (!mudanzasValidas || mudanzasValidas.length === 0) {
+                    if (contenedorSolicitudes) contenedorSolicitudes.innerHTML = `<p class="text-sm text-slate-500 text-center py-4">Aún no has publicado ninguna mudanza.</p>`;
+                    if (contenedorOfertas) contenedorOfertas.innerHTML = `<p class="text-sm text-slate-500 text-center py-4">No hay ofertas recibidas aún.</p>`;
+                    return;
+                }
+
+                let tieneOfertasGlobal = false;
+
+                for (const item of mudanzasValidas) {
+                    const m = item.mudanza;
+                    const ofertas = item.ofertas;
+
+                    let infoFechaHora = "";
+                    let textoCargaReal = m.descripcion_carga;
+                    const matchFecha = m.descripcion_carga.match(/\[Fecha: (.*?)\]/);
+                    if (matchFecha) {
+                        infoFechaHora = matchFecha[1];
+                        textoCargaReal = m.descripcion_carga.replace(matchFecha[0], "").trim();
+                    }
+
+                    const cardSol = document.createElement("div");
+                    cardSol.id = `tarjeta_sol_${m.id}`;
+                    cardSol.className = "bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2 text-sm relative";
+                    
+                    let ofertasHtmlSol = `<p class="text-xs text-slate-400 italic">Esperando ofertas de fleteros...</p>`;
+                    if (ofertas && ofertas.length > 0) {
+                        let ofertasConNombresHtml = [];
+                        for (const o of ofertas) {
+                            let nombreFletero = `Fletero #${o.fletero_id}`;
+                            try {
+                                let resFl = await fetch(`${API_URL}/fleteros/${o.fletero_id}`);
+                                if (resFl.ok) {
+                                    const fData = await resFl.json();
+                                    nombreFletero = fData.nombre || fData.fletero?.nombre || nombreFletero;
+                                } else {
+                                    const fleteroEncontrado = listaFleteros.find(f => f.id === o.fletero_id);
+                                    if (fleteroEncontrado) nombreFletero = fleteroEncontrado.nombre;
+                                }
+                            } catch(e) {}
+
+                            ofertasConNombresHtml.push(`
+                                <div class="bg-white p-2 rounded border flex justify-between items-center text-xs">
+                                    <div>🚗 <strong>${nombreFletero}</strong> - <strong>$${o.monto_oferta}</strong> (${o.tiempo_estimado})</div>
+                                    ${o.estado === 'aceptada' ? 
+                                        '<span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-semibold">Aceptada</span>' : 
+                                        `<button type="button" onclick="aceptarOferta(${o.id})" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2 py-1 rounded font-semibold">Aceptar Oferta</button>`
+                                    }
+                                </div>
+                            `);
+                        }
+                        ofertasHtmlSol = ofertasConNombresHtml.join('');
+                    }
+
+                    if (m.estado === "en_curso") {
+                        ofertasHtmlSol = `<span class="bg-emerald-200 text-emerald-800 px-2 py-0.5 rounded text-xs font-semibold inline-block">Viaje en Curso / Aprobado</span>`;
+                    }
+
+                    cardSol.innerHTML = `
+                        <button onclick="eliminarTarjeta(${m.id})" class="absolute top-3 right-3 text-slate-400 hover:text-red-500 text-xs font-bold px-1.5 py-0.5 rounded border border-emerald-200 bg-white" title="Ocultar tarjeta">✕</button>
+                        <div class="font-bold text-slate-800 pr-6">Mudanza #${m.id} - ${textoCargaReal}</div>
+                        <div class="text-xs text-slate-600"><strong>De:</strong> ${m.origen_direccion}</div>
+                        <div class="text-xs text-slate-600"><strong>A:</strong> ${m.destino_direccion}</div>
+                        ${infoFechaHora ? `<div class="text-xs text-blue-700 font-semibold">📅 Programada: ${infoFechaHora}</div>` : ''}
+                        <div class="border-t pt-2 space-y-1">
+                            <span class="text-xs font-semibold text-slate-700 block">Estado / Propuestas:</span>
+                            ${ofertasHtmlSol}
+                        </div>
+                    `;
+                    contenedorSolicitudes.appendChild(cardSol);
+
+                    const ofertasAceptadas = ofertas ? ofertas.filter(o => o.estado === 'aceptada' || o.estado === 'aprobada' || m.estado === 'en_curso') : [];
+                    if (ofertasAceptadas.length > 0 || m.estado === 'en_curso') {
+                        tieneOfertasGlobal = true;
+                        
+                        const ofertaGanadora = todasOfertas.find(o => o.mudanza_id == m.id && (o.estado === 'aceptada' || o.estado === 'aprobada'));
+                        const montoAcordado = ofertaGanadora ? ofertaGanadora.monto_oferta : 0;
+                        const fleteroIdGanador = ofertaGanadora ? ofertaGanadora.fletero_id : null;
+
+                        let nombreFleteroGanador = "Fletero Asignado";
+                        let telefonoFleteroGanador = "";
+                        if (fleteroIdGanador) {
+                            try {
+                                let resFl = await fetch(`${API_URL}/fleteros/${fleteroIdGanador}`);
+                                if (resFl.ok) {
+                                    const fData = await resFl.json();
+                                    nombreFleteroGanador = fData.nombre || fData.fletero?.nombre || nombreFleteroGanador;
+                                    telefonoFleteroGanador = fData.telefono || fData.fletero?.telefono || "";
+                                } else {
+                                    const fleteroEncontrado = listaFleteros.find(f => f.id === fleteroIdGanador);
+                                    if (fleteroEncontrado) {
+                                        nombreFleteroGanador = fleteroEncontrado.nombre;
+                                        telefonoFleteroGanador = fleteroEncontrado.telefono || "";
+                                    }
+                                }
+                            } catch(e) {}
+                        }
+
+                        const estaPagado = m.estado_pago === "pagado";
+
+                        let contactoFleteroHtml = `<span class="text-amber-700 italic">🔒 Se desbloqueará al abonar el servicio</span>`;
+                        if (estaPagado) {
+                            const telLimpio = telefonoFleteroGanador.replace(/\D/g, '');
+                            const enlaceWsp = telLimpio ? `https://wa.me/${telLimpio}` : '#';
+                            contactoFleteroHtml = `<a href="${enlaceWsp}" target="_blank" class="text-emerald-700 font-bold underline flex items-center gap-1">💬 Abrir WhatsApp (${telefonoFleteroGanador || 'Disponible'})</a>`;
+                        }
+
+                        const cardOf = document.createElement("div");
+                        cardOf.id = `tarjeta_of_${m.id}`;
+                        cardOf.className = "bg-emerald-50 p-3 rounded-xl border border-emerald-200 space-y-2 text-sm relative";
+                        
+                        let seccionPagoHtml = `
+                            <div class="bg-white p-2.5 rounded-lg border border-emerald-100 space-y-2 mt-2 text-xs">
+                                <div class="flex justify-between items-center font-bold text-slate-700">
+                                    <span>💰 Monto del Servicio:</span>
+                                    <span class="text-emerald-700 text-sm">$${montoAcordado}</span>
+                                </div>
+                                ${estaPagado ? 
+                                    '<div class="bg-emerald-100 text-emerald-800 w-full py-2 rounded-lg font-bold flex items-center justify-center gap-1.5 text-center">✅ <span>Pago Realizado y Verificado</span></div>' : 
+                                    `<div class="space-y-2">
+                                        <div class="text-amber-700 font-semibold text-[11px]">⚠️ Abona para desbloquear el contacto directo de WhatsApp con tu fletero.</div>
+                                        <button onclick="pagarConCheckoutPro(${m.id}, ${montoAcordado}, '${textoCargaReal.replace(/'/g, "")}')" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-semibold shadow">💳 Pagar con Mercado Pago ($${montoAcordado})</button>
+                                        <button onclick="verificarPagoReal(${m.id})" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-1.5 rounded-lg font-semibold shadow text-xs">🔄 Verificar pago en Mercado Pago</button>
+                                    </div>`
+                                }
+                            </div>`;
+
+                        cardOf.innerHTML = `
+                            <button onclick="eliminarTarjeta(${m.id})" class="absolute top-3 right-3 text-slate-400 hover:text-red-500 text-xs font-bold px-1.5 py-0.5 rounded border border-emerald-200 bg-white" title="Ocultar tarjeta">✕</button>
+                            <div class="font-bold text-emerald-900 pr-6">🚀 Mudanza Aprobada #${m.id}</div>
+                            <div class="bg-white p-2.5 rounded-lg border border-emerald-100 space-y-1 text-xs">
+                                <div class="text-slate-500 font-semibold uppercase text-[10px]">Fletero Asignado</div>
+                                <div>🚗 <strong>Nombre:</strong> ${nombreFleteroGanador}</div>
+                                <div>📞 <strong>Teléfono:</strong> ${contactoFleteroHtml}</div>
+                            </div>
+                            <div class="text-xs text-slate-600"><strong>Carga:</strong> ${textoCargaReal}</div>
+                            <div class="text-xs text-slate-600"><strong>Ruta:</strong> ${m.origen_direccion} ➔ ${m.destino_direccion}</div>
+                            ${infoFechaHora ? `<div class="text-xs text-emerald-800 font-bold">📅 Programada: ${infoFechaHora}</div>` : ''}
+                            ${seccionPagoHtml}
+                        `;
+                        contenedorOfertas.appendChild(cardOf);
+                    }
+                }
+
+                if (!tieneOfertasGlobal && contenedorOfertas) {
+                    contenedorOfertas.innerHTML = `<p class="text-sm text-slate-500 text-center py-4">No hay mudanzas aprobadas en este momento.</p>`;
+                }
+
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function pagarConCheckoutPro(mudanzaId, monto, descripcion) {
+            try {
+                const res = await fetch(`${API_URL}/crear-preferencia-pago`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        mudanza_id: mudanzaId,
+                        titulo: descripcion,
+                        monto: monto
+                    })
+                });
+                const result = await res.json();
+                
+                if (result.init_point) {
+                    window.location.href = result.init_point;
+                } else {
+                    alert("No se pudo generar la preferencia de pago: " + (result.detail || "Error desconocido"));
+                }
+            } catch (err) {
+                alert("Error de conexión al procesar el pago.");
+            }
+        }
+
+        async function verificarPagoReal(mudanzaId) {
+            try {
+                const res = await fetch(`${API_URL}/verificar-pago/${mudanzaId}`);
+                const result = await res.json();
+                if (res.ok && result.status === "pagado") {
+                    alert("¡Pago confirmado por Mercado Pago con éxito!");
+                    cargarMisMudanzas();
+                } else {
+                    alert("⚠️ Aún no se registra el pago aprobado en Mercado Pago. Intenta nuevamente en unos segundos.");
+                }
+            } catch (err) {
+                alert("Error de conexión al verificar el pago.");
+            }
+        }
+
+        function eliminarTarjeta(mId) {
+            const eliminadas = JSON.parse(localStorage.getItem(`cliente_eliminadas_${clienteIdActual}`) || "[]");
+            if (!eliminadas.includes(mId)) {
+                eliminadas.push(mId);
+                localStorage.setItem(`cliente_eliminadas_${clienteIdActual}`, JSON.stringify(eliminadas));
+            }
+            ['sol', 'of'].forEach(tipo => {
+                const el = document.getElementById(`tarjeta_${tipo}_${mId}`);
+                if (el) el.remove();
+            });
+        }
+
+        async function aceptarOferta(ofertaId) {
+            try {
+                const res = await fetch(`${API_URL}/ofertas/${ofertaId}/aceptar`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" }
+                });
+                const result = await res.json();
+                if (res.ok) {
+                    alert("¡Has aceptado la oferta! La mudanza pasó a Mudanza aprobada.");
+                    cargarMisMudanzas();
+                } else {
+                    alert("Error al aceptar la oferta: " + (result.detail || "Intente nuevamente"));
+                }
+            } catch (err) {
+                alert("Error de conexión con el servidor.");
+            }
+        }
+
+        function mostrarDatosPerfil() {
+            if (!datosClienteActual) return;
+            document.getElementById("perfilNombreInput").value = datosClienteActual.nombre || "";
+            document.getElementById("perfilEmailInput").value = datosClienteActual.email || "";
+            document.getElementById("perfilTelefonoInput").value = datosClienteActual.telefono || "";
+        }
+
+        async function guardarPerfilCliente() {
+            if (!clienteIdActual) return;
+            const nuevoNombre = document.getElementById("perfilNombreInput").value;
+            const nuevoEmail = document.getElementById("perfilEmailInput").value;
+            const nuevoTelefono = document.getElementById("perfilTelefonoInput").value;
+
+            try {
+                const res = await fetch(`${API_URL}/clientes/${clienteIdActual}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ nombre: nuevoNombre, email: nuevoEmail, telefono: nuevoTelefono })
+                });
+                if (res.ok) {
+                    datosClienteActual.nombre = nuevoNombre;
+                    datosClienteActual.email = nuevoEmail;
+                    datosClienteActual.telefono = nuevoTelefono;
+                    sessionStorage.setItem("datosCliente", JSON.stringify(datosClienteActual));
+                    alert("¡Perfil actualizado con éxito!");
+                } else {
+                    alert("No se pudo actualizar el perfil.");
+                }
+            } catch(e) {
+                alert("Error de conexión al actualizar el perfil.");
+            }
+        }
+
+        async function ejecutarRegistroCliente() {
+            try {
+                const archivoFrente = document.getElementById("regDniFrenteFile").files[0];
+                const archivoDorso = document.getElementById("regDniDorsoFile").files[0];
+
+                const dniFrenteBase64 = archivoFrente ? await convertirArchivoABase64(archivoFrente) : "";
+                const dniDorsoBase64 = archivoDorso ? await convertirArchivoABase64(archivoDorso) : "";
+
+                const data = {
+                    nombre: document.getElementById("regNombre").value,
+                    telefono: document.getElementById("regTelefono").value,
+                    email: document.getElementById("regEmail").value,
+                    password: document.getElementById("regPassword").value,
+                    dni_frente: dniFrenteBase64,
+                    dni_dorso: dniDorsoBase64
+                };
+
+                const res = await fetch(`${API_URL}/clientes/`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(data)
+                });
+                const result = await res.json();
+                if (res.ok) {
+                    alert("¡Registro exitoso! Ahora puedes iniciar sesión.");
+                    cambiarTabAuth('login');
+                } else {
+                    alert("Error: " + (result.detail || "No se pudo registrar"));
+                }
+            } catch (err) { alert("Error al procesar los archivos o conectar con el servidor"); }
+        }
+
+        function cerrarSesionCliente() { 
+            sessionStorage.clear();
+            location.reload(); 
+        }
     </script>
 </body>
 </html>
