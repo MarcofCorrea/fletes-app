@@ -291,6 +291,7 @@
                     seguro_pdf: seguro ? await convertirArchivoABase64(seguro) : ""
                 };
 
+                // RESTAURADO CON BARRA FINAL PARA COINCIDIR CON EL BACKEND
                 const res = await fetch(`${API_URL}/fleteros/`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -312,7 +313,7 @@
             try {
                 let mudanzasServidor = [];
                 try {
-                    const resM = await fetch(`${API_URL}/mudanzas/`);
+                    const resM = await fetch(`${API_URL}/mudanzas`);
                     if (resM.ok) mudanzasServidor = await resM.json();
                 } catch(e) {}
 
@@ -326,7 +327,7 @@
 
                 let ofertasServidor = [];
                 try {
-                    const resO = await fetch(`${API_URL}/ofertas/`);
+                    const resO = await fetch(`${API_URL}/ofertas`);
                     if (resO.ok) ofertasServidor = await resO.json();
                 } catch(e) {}
 
@@ -424,7 +425,6 @@
                         infoFechaHoraFinal = `${fechaOriginal} a las ${horaOriginal} hs (Modificada)`;
                     }
 
-                    // CORRECCIÓN: Solamente pasa a "Mudanzas Aprobadas" si el fletero hizo clic en el botón de aprobación definitiva. De lo contrario, se queda en solicitudes.
                     const fleteroYaAproboDefinitivo = aprobadasPorFletero.includes(m.id);
 
                     if (fleteroYaAproboDefinitivo || estaFinalizada) {
@@ -671,7 +671,7 @@
             localStorage.setItem("fletesapp_ofertas_globales", JSON.stringify(ofertasGlobales));
 
             try {
-                await fetch(`${API_URL}/ofertas/`, { 
+                await fetch(`${API_URL}/ofertas`, { 
                     method: "POST", 
                     headers: {"Content-Type":"application/json"}, 
                     body: JSON.stringify(nuevaOfertaObj)

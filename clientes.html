@@ -122,7 +122,6 @@
                         <button type="button" onclick="guardarPerfilCliente()" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-lg text-sm font-semibold mt-2">Guardar Cambios</button>
                     </div>
 
-                    <!-- SECCIÓN DE TARJETA GUARDADA EN PERFIL (DIRECTA) -->
                     <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3 text-sm mt-4">
                         <h3 class="font-bold text-slate-800 text-sm">💳 Tarjeta de Crédito/Débito</h3>
                         <p class="text-xs text-slate-500">Asocia tu tarjeta para pagar tus mudanzas al instante con un solo clic.</p>
@@ -168,9 +167,7 @@
     </div>
 
     <script>
-        const API_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" 
-            ? "http://localhost:8000" 
-            : "https://fletes-app.onrender.com";
+        const API_URL = "https://fletes-app.onrender.com";
 
         let clienteIdActual = null;
         let datosClienteActual = null;
@@ -217,25 +214,32 @@
         async function accesoRapidoCliente() {
             try {
                 const res = await fetch(`${API_URL}/clientes/`);
-                const clientes = await res.json();
+                let clientes = [];
+                if (res.ok) clientes = await res.json();
 
-                if (res.ok && clientes && clientes.length > 0) {
-                    const clientePrueba = clientes[0];
-                    clienteIdActual = clientePrueba.id;
-                    datosClienteActual = clientePrueba;
-                    
-                    sessionStorage.setItem("clienteId", clienteIdActual);
-                    sessionStorage.setItem("datosCliente", JSON.stringify(datosClienteActual));
-
-                    document.getElementById("contenedorAuth").style.display = "none";
-                    document.getElementById("vistaDashboardCliente").style.display = "flex";
-                    cargarMisMudanzas();
-                } else {
-                    alert("⚠️ No hay clientes registrados. Por favor, regístrate por primera vez desde la pestaña 'Registrarse'.");
+                if (!clientes || clientes.length === 0) {
+                    clientes = [{ id: 1, nombre: "Cliente Demo", email: "cliente@demo.com", telefono: "3511234567" }];
                 }
+
+                const clientePrueba = clientes[0];
+                clienteIdActual = clientePrueba.id;
+                datosClienteActual = clientePrueba;
+                
+                sessionStorage.setItem("clienteId", clienteIdActual);
+                sessionStorage.setItem("datosCliente", JSON.stringify(datosClienteActual));
+
+                document.getElementById("contenedorAuth").style.display = "none";
+                document.getElementById("vistaDashboardCliente").style.display = "flex";
+                cargarMisMudanzas();
             } catch (e) {
-                console.error(e);
-                alert("Error de conexión con el servidor local.");
+                clienteIdActual = 1;
+                datosClienteActual = { id: 1, nombre: "Cliente Demo", email: "cliente@demo.com", telefono: "3511234567" };
+                sessionStorage.setItem("clienteId", clienteIdActual);
+                sessionStorage.setItem("datosCliente", JSON.stringify(datosClienteActual));
+
+                document.getElementById("contenedorAuth").style.display = "none";
+                document.getElementById("vistaDashboardCliente").style.display = "flex";
+                cargarMisMudanzas();
             }
         }
 
@@ -365,7 +369,7 @@
             };
 
             try {
-                const res = await fetch(`${API_URL}/mudanzas/`, {
+                const res = await fetch(`${API_URL}/mudanzas`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(data)
@@ -391,8 +395,8 @@
             try {
                 const [resM, resO, resF] = await Promise.all([
                     fetch(`${API_URL}/mudanzas/cliente/${clienteIdActual}`),
-                    fetch(`${API_URL}/ofertas/`),
-                    fetch(`${API_URL}/fleteros/`)
+                    fetch(`${API_URL}/ofertas`),
+                    fetch(`${API_URL}/fleteros`)
                 ]);
                 
                 let rawData = [];
@@ -400,7 +404,6 @@
                     rawData = await resM.json();
                 }
 
-                // Blindaje robusto: garantizamos que sea un array y manejamos posibles objetos anidados
                 if (!Array.isArray(rawData)) {
                     rawData = rawData.mudanzas || rawData.results || [];
                 }
@@ -417,7 +420,6 @@
                 const eliminadas = JSON.parse(localStorage.getItem(`cliente_eliminadas_${clienteIdActual}`) || "[]");
                 const finalizadasLocal = JSON.parse(localStorage.getItem(`mudanzas_finalizadas`) || "[]");
                 
-                // Mapeo seguro si el backend devuelve un array plano de mudanzas o un array de objetos {mudanza, ofertas}
                 const mudanzasValidas = rawData.filter(item => {
                     const idM = item.mudanza ? item.mudanza.id : item.id;
                     return !eliminadas.includes(idM);
@@ -730,7 +732,6 @@
             document.getElementById("modalReseñas").style.display = "none";
         }
 
-        // --- FUNCIONES DE TARJETA GUARDADA Y PAGO DIRECTO ---
         function mostrarDatosPerfil() {
             if (!datosClienteActual) return;
             document.getElementById("perfilNombreInput").value = datosClienteActual.nombre || "";
@@ -780,9 +781,6 @@
 
             try {
                 localStorage.setItem(`pago_exitoso_${mudanzaId}`, "true");
-                
-                let finalizadas = JSON.parse(localStorage.getItem(`mudanzas_finalizadas`) || "[]");
-                
                 alert(`¡Pago de $${monto} procesado con éxito con tu tarjeta guardada! El contacto del fletero ha sido desbloqueado.`);
                 cargarMisMudanzas();
             } catch (e) {
