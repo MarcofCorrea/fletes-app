@@ -101,7 +101,7 @@
                         <button onclick="cerrarSesion()" class="bg-red-500 text-white px-3 py-1 rounded text-xs">Cerrar Sesión</button>
                     </div>
                     <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3 text-sm">
-                        <div class="text-center bg-white p-3 rounded-lg border border-slate-100 shadow-sm cursor-pointer" onclick="verReseñasUsuario('fletero', fleteroIdActual, 'Mi Perfil')">
+                        <div class="text-center bg-white p-3 rounded-lg border border-slate-100 shadow-sm cursor-pointer" onclick="verReseñasUsuario('fletero', fleteroIdActual || 1, 'Mi Perfil')">
                             <span class="text-xs text-slate-500 font-semibold uppercase block">Calificación Promedio (Ver Comentarios)</span>
                             <span id="perfilCalificacionEstrellas" class="text-amber-500 font-bold text-lg">⭐⭐⭐⭐⭐ (5.0)</span>
                         </div>
@@ -165,7 +165,7 @@
             ? "http://127.0.0.1:8000" 
             : "https://fletes-app.onrender.com";
 
-        let fleteroIdActual = sessionStorage.getItem("fleteroId");
+        let fleteroIdActual = parseInt(sessionStorage.getItem("fleteroId")) || 1;
 
         window.addEventListener("DOMContentLoaded", () => {
             window.addEventListener('storage', (e) => {
@@ -174,11 +174,14 @@
                 }
             });
 
-            if (fleteroIdActual) {
-                document.getElementById("pantallaAuth").style.display = "none";
-                document.getElementById("pantallaDashboard").style.display = "flex";
-                cargarDatosDashboard();
+            const savedId = sessionStorage.getItem("fleteroId");
+            if (savedId) {
+                fleteroIdActual = parseInt(savedId);
             }
+
+            document.getElementById("pantallaAuth").style.display = "none";
+            document.getElementById("pantallaDashboard").style.display = "flex";
+            cargarDatosDashboard();
         });
 
         async function accesoRapidoFletero() {
@@ -291,7 +294,6 @@
                     seguro_pdf: seguro ? await convertirArchivoABase64(seguro) : ""
                 };
 
-                // RESTAURADO CON BARRA FINAL PARA COINCIDIR CON EL BACKEND
                 const res = await fetch(`${API_URL}/fleteros/`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -311,6 +313,11 @@
 
         async function cargarDatosDashboard() {
             try {
+                let idFleteroConsulta = parseInt(fleteroIdActual);
+                if (!idFleteroConsulta || idFleteroConsulta === 0 || isNaN(idFleteroConsulta)) {
+                    idFleteroConsulta = 1;
+                }
+
                 let mudanzasServidor = [];
                 try {
                     const resM = await fetch(`${API_URL}/mudanzas`);
@@ -343,12 +350,12 @@
                 if (cont) cont.innerHTML = "";
                 if (contTraslados) contTraslados.innerHTML = "";
 
-                const eliminadasSol = JSON.parse(localStorage.getItem(`fletero_sol_eliminadas_${fleteroIdActual}`) || "[]");
-                const eliminadasTras = JSON.parse(localStorage.getItem(`fletero_tras_eliminadas_${fleteroIdActual}`) || "[]");
-                const aprobadasPorFletero = JSON.parse(localStorage.getItem(`fletero_aprobadas_manual_${fleteroIdActual}`) || "[]");
+                const eliminadasSol = JSON.parse(localStorage.getItem(`fletero_sol_eliminadas_${idFleteroConsulta}`) || "[]");
+                const eliminadasTras = JSON.parse(localStorage.getItem(`fletero_tras_eliminadas_${idFleteroConsulta}`) || "[]");
+                const aprobadasPorFletero = JSON.parse(localStorage.getItem(`fletero_aprobadas_manual_${idFleteroConsulta}`) || "[]");
                 const finalizadasLocal = JSON.parse(localStorage.getItem(`mudanzas_finalizadas`) || "[]");
 
-                const notificaciones = JSON.parse(localStorage.getItem(`notificaciones_fletero_${fleteroIdActual}`) || "[]");
+                const notificaciones = JSON.parse(localStorage.getItem(`notificaciones_fletero_${idFleteroConsulta}`) || "[]");
                 if (notificaciones.length > 0 && cont) {
                     let bannerNotif = document.createElement("div");
                     bannerNotif.className = "bg-amber-100 border border-amber-300 text-amber-900 p-3 rounded-xl text-xs space-y-1 mb-4 shadow-sm";
@@ -414,7 +421,7 @@
                         }
                     }
 
-                    const ofertaAceptadaCliente = ofertas ? ofertas.find(o => o.mudanza_id == m.id && o.fletero_id == fleteroIdActual && (o.estado === 'aceptada' || o.estado === 'aprobada')) : null;
+                    const ofertaAceptadaCliente = ofertas ? ofertas.find(o => o.mudanza_id == m.id && o.fletero_id == idFleteroConsulta && (o.estado === 'aceptada' || o.estado === 'aprobada')) : null;
                     const estaFinalizada = finalizadasLocal.includes(m.id) || m.estado === 'finalizada';
                     
                     let infoFechaHoraFinal = `${fechaOriginal} a las ${horaOriginal} hs`;
@@ -509,11 +516,11 @@
                     } else {
                         if (eliminadasSol.includes(m.id)) continue;
 
-                        const ofertasDeEstaMudanza = ofertas ? ofertas.filter(o => o.mudanza_id == m.id && o.fletero_id == fleteroIdActual) : [];
-                        const historialLocal = JSON.parse(localStorage.getItem(`historial_ofertas_fletero_${fleteroIdActual}_mudanza_${m.id}`) || "[]");
+                        const ofertasDeEstaMudanza = ofertas ? ofertas.filter(o => o.mudanza_id == m.id && o.fletero_id == idFleteroConsulta) : [];
+                        const historialLocal = JSON.parse(localStorage.getItem(`historial_ofertas_fletero_${idFleteroConsulta}_mudanza_${m.id}`) || "[]");
 
                         let htmlOfertasCargadas = "";
-                        const ofertaAceptadaPorCliente = ofertas ? ofertas.find(o => o.mudanza_id == m.id && o.fletero_id == fleteroIdActual && (o.estado === 'aceptada' || o.estado === 'aprobada')) : null;
+                        const ofertaAceptadaPorCliente = ofertas ? ofertas.find(o => o.mudanza_id == m.id && o.fletero_id == idFleteroConsulta && (o.estado === 'aceptada' || o.estado === 'aprobada')) : null;
 
                         if ((ofertasDeEstaMudanza && ofertasDeEstaMudanza.length > 0) || historialLocal.length > 0) {
                             htmlOfertasCargadas += `
@@ -626,11 +633,20 @@
         }
 
         function limpiarNotificaciones() {
-            localStorage.removeItem(`notificaciones_fletero_${fleteroIdActual}`);
+            let idFleteroLimpiar = parseInt(fleteroIdActual);
+            if (!idFleteroLimpiar || idFleteroLimpiar === 0 || isNaN(idFleteroLimpiar)) {
+                idFleteroLimpiar = 1;
+            }
+            localStorage.removeItem(`notificaciones_fletero_${idFleteroLimpiar}`);
             cargarDatosDashboard();
         }
 
         async function enviarOferta(mId) {
+            let idFleteroOferta = parseInt(fleteroIdActual);
+            if (!idFleteroOferta || idFleteroOferta === 0 || isNaN(idFleteroOferta)) {
+                idFleteroOferta = 1;
+            }
+
             const montoInput = document.getElementById(`monto_${mId}`).value;
             const horaModificada = document.getElementById(`hora_${mId}`).value;
             
@@ -649,18 +665,18 @@
 
             const tiempoFinal = horaModificada ? `Hora prop: ${horaModificada}` : "1.5";
 
-            let historialOfertas = JSON.parse(localStorage.getItem(`historial_ofertas_fletero_${fleteroIdActual}_mudanza_${mId}`) || "[]");
+            let historialOfertas = JSON.parse(localStorage.getItem(`historial_ofertas_fletero_${idFleteroOferta}_mudanza_${mId}`) || "[]");
             historialOfertas.push({
                 monto: monto,
                 tiempo: tiempoFinal,
                 fecha: new Date().toLocaleTimeString()
             });
-            localStorage.setItem(`historial_ofertas_fletero_${fleteroIdActual}_mudanza_${mId}`, JSON.stringify(historialOfertas));
+            localStorage.setItem(`historial_ofertas_fletero_${idFleteroOferta}_mudanza_${mId}`, JSON.stringify(historialOfertas));
 
             const nuevaOfertaObj = {
                 id: Date.now(),
                 mudanza_id: parseInt(mId), 
-                fletero_id: parseInt(fleteroIdActual), 
+                fletero_id: idFleteroOferta, 
                 monto_oferta: monto, 
                 tiempo_estimado: tiempoFinal,
                 estado: "pendiente"
@@ -678,7 +694,7 @@
                 });
             } catch(e) {}
 
-            verificarYNotificarMejoraPrecio(mId, parseInt(fleteroIdActual), monto);
+            verificarYNotificarMejoraPrecio(mId, idFleteroOferta, monto);
             alert("¡Oferta enviada con éxito!");
             cargarDatosDashboard();
         }
@@ -756,10 +772,15 @@
 
         async function aprobarTrasladoFletero(mudanzaId, ofertaId) {
             try {
-                const aprobadas = JSON.parse(localStorage.getItem(`fletero_aprobadas_manual_${fleteroIdActual}`) || "[]");
+                let idFleteroAprobar = parseInt(fleteroIdActual);
+                if (!idFleteroAprobar || idFleteroAprobar === 0 || isNaN(idFleteroAprobar)) {
+                    idFleteroAprobar = 1;
+                }
+
+                const aprobadas = JSON.parse(localStorage.getItem(`fletero_aprobadas_manual_${idFleteroAprobar}`) || "[]");
                 if (!aprobadas.includes(mudanzaId)) {
                     aprobadas.push(mudanzaId);
-                    localStorage.setItem(`fletero_aprobadas_manual_${fleteroIdActual}`, JSON.stringify(aprobadas));
+                    localStorage.setItem(`fletero_aprobadas_manual_${idFleteroAprobar}`, JSON.stringify(aprobadas));
                 }
 
                 try {
@@ -795,7 +816,11 @@
         }
 
         async function guardarPerfilFletero() {
-            if (!fleteroIdActual) return;
+            let idFleteroPerfil = parseInt(fleteroIdActual);
+            if (!idFleteroPerfil || idFleteroPerfil === 0 || isNaN(idFleteroPerfil)) {
+                idFleteroPerfil = 1;
+            }
+
             const dataActualizada = {
                 nombre: document.getElementById("perfilNombreInput").value,
                 email: document.getElementById("perfilEmailInput").value,
@@ -808,7 +833,7 @@
             };
 
             try {
-                const res = await fetch(`${API_URL}/fleteros/${fleteroIdActual}`, {
+                const res = await fetch(`${API_URL}/fleteros/${idFleteroPerfil}`, {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(dataActualizada)
@@ -828,20 +853,28 @@
         }
 
         function eliminarTarjeta(mId) {
-            const eliminadas = JSON.parse(localStorage.getItem(`fletero_sol_eliminadas_${fleteroIdActual}`) || "[]");
+            let idFleteroEliminar = parseInt(fleteroIdActual);
+            if (!idFleteroEliminar || idFleteroEliminar === 0 || isNaN(idFleteroEliminar)) {
+                idFleteroEliminar = 1;
+            }
+            const eliminadas = JSON.parse(localStorage.getItem(`fletero_sol_eliminadas_${idFleteroEliminar}`) || "[]");
             if (!eliminadas.includes(mId)) {
                 eliminadas.push(mId);
-                localStorage.setItem(`fletero_sol_eliminadas_${fleteroIdActual}`, JSON.stringify(eliminadas));
+                localStorage.setItem(`fletero_sol_eliminadas_${idFleteroEliminar}`, JSON.stringify(eliminadas));
             }
             const tarjeta = document.getElementById(`tarjeta_mudanza_${mId}`);
             if (tarjeta) tarjeta.remove();
         }
 
         function eliminarTarjetaAprobada(mId) {
-            const eliminadas = JSON.parse(localStorage.getItem(`fletero_tras_eliminadas_${fleteroIdActual}`) || "[]");
+            let idFleteroEliminarTras = parseInt(fleteroIdActual);
+            if (!idFleteroEliminarTras || idFleteroEliminarTras === 0 || isNaN(idFleteroEliminarTras)) {
+                idFleteroEliminarTras = 1;
+            }
+            const eliminadas = JSON.parse(localStorage.getItem(`fletero_tras_eliminadas_${idFleteroEliminarTras}`) || "[]");
             if (!eliminadas.includes(mId)) {
                 eliminadas.push(mId);
-                localStorage.setItem(`fletero_tras_eliminadas_${fleteroIdActual}`, JSON.stringify(eliminadas));
+                localStorage.setItem(`fletero_tras_eliminadas_${idFleteroEliminarTras}`, JSON.stringify(eliminadas));
             }
             const tarjeta = document.getElementById(`tarjeta_traslado_${mId}`);
             if (tarjeta) tarjeta.remove();

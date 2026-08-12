@@ -103,7 +103,7 @@
                         <button type="button" onclick="cerrarSesionCliente()" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-xs font-semibold">Cerrar Sesión</button>
                     </div>
                     <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3 text-sm">
-                        <div class="text-center bg-white p-3 rounded-lg border border-slate-100 shadow-sm cursor-pointer" onclick="verReseñasUsuario('cliente', clienteIdActual, 'Mi Perfil')">
+                        <div class="text-center bg-white p-3 rounded-lg border border-slate-100 shadow-sm cursor-pointer" onclick="verReseñasUsuario('cliente', clienteIdActual || 1, 'Mi Perfil')">
                             <span class="text-xs text-slate-500 font-semibold uppercase block">Calificación Promedio (Ver Comentarios)</span>
                             <span id="perfilCalificacionEstrellas" class="text-amber-500 font-bold text-lg">⭐⭐⭐⭐⭐ (5.0)</span>
                         </div>
@@ -168,11 +168,11 @@
 
     <script>
         const API_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" 
-    ? "http://127.0.0.1:8000" 
-    : "https://fletes-app.onrender.com";
+            ? "http://127.0.0.1:8000" 
+            : "https://fletes-app.onrender.com";
 
-        let clienteIdActual = null;
-        let datosClienteActual = null;
+        let clienteIdActual = parseInt(sessionStorage.getItem("clienteId")) || 1;
+        let datosClienteActual = JSON.parse(sessionStorage.getItem("datosCliente")) || { id: 1, nombre: "Cliente Demo", email: "cliente@demo.com", telefono: "3511234567" };
 
         window.addEventListener("DOMContentLoaded", async () => {
             const urlParams = new URLSearchParams(window.location.search);
@@ -201,15 +201,16 @@
             if (savedId && savedData) {
                 clienteIdActual = parseInt(savedId);
                 datosClienteActual = JSON.parse(savedData);
-                document.getElementById("contenedorAuth").style.display = "none";
-                document.getElementById("vistaDashboardCliente").style.display = "flex";
-                
-                if (sessionStorage.getItem("abrir_seccion_ofertas") === "true") {
-                    sessionStorage.removeItem("abrir_seccion_ofertas");
-                    cambiarTabDashboard('ofertas');
-                } else {
-                    cargarMisMudanzas();
-                }
+            }
+
+            document.getElementById("contenedorAuth").style.display = "none";
+            document.getElementById("vistaDashboardCliente").style.display = "flex";
+            
+            if (sessionStorage.getItem("abrir_seccion_ofertas") === "true") {
+                sessionStorage.removeItem("abrir_seccion_ofertas");
+                cambiarTabDashboard('ofertas');
+            } else {
+                cargarMisMudanzas();
             }
         });
 
@@ -363,8 +364,13 @@
                 return;
             }
 
+            let idClienteFinal = parseInt(clienteIdActual);
+            if (!idClienteFinal || idClienteFinal === 0 || isNaN(idClienteFinal)) {
+                idClienteFinal = 1;
+            }
+
             const data = {
-                cliente_id: clienteIdActual,
+                cliente_id: idClienteFinal,
                 origen_direccion: origen,
                 destino_direccion: destino,
                 descripcion_carga: `${descripcion} [Fecha: ${fecha} - ${hora}]`
@@ -386,7 +392,7 @@
                     document.getElementById("horaMudanza").value = "";
                     cargarMisMudanzas();
                 } else {
-                    alert("Error al publicar mudanza");
+                    alert("Error al publicar mudanza: " + (result.detail || "Intente nuevamente"));
                 }
             } catch (err) {
                 alert("Error de conexión con el servidor");
@@ -395,8 +401,13 @@
 
         async function cargarMisMudanzas() {
             try {
+                let idClienteConsulta = parseInt(clienteIdActual);
+                if (!idClienteConsulta || idClienteConsulta === 0 || isNaN(idClienteConsulta)) {
+                    idClienteConsulta = 1;
+                }
+
                 const [resM, resO, resF] = await Promise.all([
-                    fetch(`${API_URL}/mudanzas/cliente/${clienteIdActual}`),
+                    fetch(`${API_URL}/mudanzas/cliente/${idClienteConsulta}`),
                     fetch(`${API_URL}/ofertas`),
                     fetch(`${API_URL}/fleteros`)
                 ]);
@@ -419,7 +430,7 @@
                 if (contenedorSolicitudes) contenedorSolicitudes.innerHTML = "";
                 if (contenedorOfertas) contenedorOfertas.innerHTML = "";
 
-                const eliminadas = JSON.parse(localStorage.getItem(`cliente_eliminadas_${clienteIdActual}`) || "[]");
+                const eliminadas = JSON.parse(localStorage.getItem(`cliente_eliminadas_${idClienteConsulta}`) || "[]");
                 const finalizadasLocal = JSON.parse(localStorage.getItem(`mudanzas_finalizadas`) || "[]");
                 
                 const mudanzasValidas = rawData.filter(item => {
@@ -740,7 +751,8 @@
             document.getElementById("perfilEmailInput").value = datosClienteActual.email || "";
             document.getElementById("perfilTelefonoInput").value = datosClienteActual.telefono || "";
             
-            const tarjetaGuardada = localStorage.getItem(`tarjeta_guardada_cliente_${clienteIdActual}`);
+            const idPerfilActivo = parseInt(clienteIdActual) || 1;
+            const tarjetaGuardada = localStorage.getItem(`tarjeta_guardada_cliente_${idPerfilActivo}`);
             const contenedorEstado = document.getElementById("estadoTarjetaGuardada");
             if (tarjetaGuardada && contenedorEstado) {
                 const t = JSON.parse(tarjetaGuardada);
@@ -764,7 +776,8 @@
                 vencimiento: vto
             };
 
-            localStorage.setItem(`tarjeta_guardada_cliente_${clienteIdActual}`, JSON.stringify(datosTarjeta));
+            const idTarjetaActivo = parseInt(clienteIdActual) || 1;
+            localStorage.setItem(`tarjeta_guardada_cliente_${idTarjetaActivo}`, JSON.stringify(datosTarjeta));
             alert("¡Tarjeta asociada con éxito a tu perfil!");
             mostrarDatosPerfil();
 
@@ -774,7 +787,8 @@
         }
 
         async function pagarConTarjetaGuardada(mudanzaId, monto) {
-            const tarjetaGuardada = localStorage.getItem(`tarjeta_guardada_cliente_${clienteIdActual}`);
+            const idTarjetaActivo = parseInt(clienteIdActual) || 1;
+            const tarjetaGuardada = localStorage.getItem(`tarjeta_guardada_cliente_${idTarjetaActivo}`);
             if (!tarjetaGuardada) {
                 alert("⚠️ No tienes ninguna tarjeta asociada en tu perfil. Ve a la pestaña 'Perfil' para agregar una.");
                 cambiarTabDashboard('perfil');
@@ -814,10 +828,14 @@
         }
 
         function eliminarTarjeta(mId) {
-            const eliminadas = JSON.parse(localStorage.getItem(`cliente_eliminadas_${clienteIdActual}`) || "[]");
+            let idClienteEliminar = parseInt(clienteIdActual);
+            if (!idClienteEliminar || idClienteEliminar === 0 || isNaN(idClienteEliminar)) {
+                idClienteEliminar = 1;
+            }
+            const eliminadas = JSON.parse(localStorage.getItem(`cliente_eliminadas_${idClienteEliminar}`) || "[]");
             if (!eliminadas.includes(mId)) {
                 eliminadas.push(mId);
-                localStorage.setItem(`cliente_eliminadas_${clienteIdActual}`, JSON.stringify(eliminadas));
+                localStorage.setItem(`cliente_eliminadas_${idClienteEliminar}`, JSON.stringify(eliminadas));
             }
             ['sol', 'of'].forEach(tipo => {
                 const el = document.getElementById(`tarjeta_${tipo}_${mId}`);
@@ -844,22 +862,27 @@
         }
 
         async function guardarPerfilCliente() {
-            if (!clienteIdActual) return;
+            let idClientePerfil = parseInt(clienteIdActual);
+            if (!idClientePerfil || idClientePerfil === 0 || isNaN(idClientePerfil)) {
+                idClientePerfil = 1;
+            }
             const nuevoNombre = document.getElementById("perfilNombreInput").value;
             const nuevoEmail = document.getElementById("perfilEmailInput").value;
             const nuevoTelefono = document.getElementById("perfilTelefonoInput").value;
 
             try {
-                const res = await fetch(`${API_URL}/clientes/${clienteIdActual}`, {
+                const res = await fetch(`${API_URL}/clientes/${idClientePerfil}`, {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ nombre: nuevoNombre, email: nuevoEmail, telefono: nuevoTelefono })
                 });
                 if (res.ok) {
-                    datosClienteActual.nombre = nuevoNombre;
-                    datosClienteActual.email = nuevoEmail;
-                    datosClienteActual.telefono = nuevoTelefono;
-                    sessionStorage.setItem("datosCliente", JSON.stringify(datosClienteActual));
+                    if(datosClienteActual) {
+                        datosClienteActual.nombre = nuevoNombre;
+                        datosClienteActual.email = nuevoEmail;
+                        datosClienteActual.telefono = nuevoTelefono;
+                        sessionStorage.setItem("datosCliente", JSON.stringify(datosClienteActual));
+                    }
                     alert("¡Perfil actualizado con éxito!");
                 } else {
                     alert("No se pudo actualizar el perfil.");
