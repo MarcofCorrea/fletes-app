@@ -18,7 +18,8 @@ class ActualizarFleteroIn(BaseModel):
     alias_bancario: Optional[str] = None
     nombre_banco: Optional[str] = None
 
-@router.post("/fleteros/", status_code=status.HTTP_201_CREATED)
+@router.post("", status_code=status.HTTP_201_CREATED)
+@router.post("/", status_code=status.HTTP_201_CREATED)
 def registrar_fletero(fletero: FleteroCreate, db: Session = Depends(get_db)):
     existente = db.query(UsuarioDB).filter(UsuarioDB.email == fletero.email).first()
     if existente:
@@ -58,7 +59,7 @@ def registrar_fletero(fletero: FleteroCreate, db: Session = Depends(get_db)):
         }
     }
 
-@router.post("/fleteros/login")
+@router.post("/login")
 def login_fletero(credenciales: LoginRequest, db: Session = Depends(get_db)):
     fletero = db.query(UsuarioDB).filter(
         UsuarioDB.email == credenciales.email,
@@ -83,7 +84,12 @@ def login_fletero(credenciales: LoginRequest, db: Session = Depends(get_db)):
         }
     }
 
-@router.get("/fleteros/{fletero_id}")
+@router.get("")
+@router.get("/")
+def listar_fleteros(db: Session = Depends(get_db)):
+    return db.query(UsuarioDB).filter(UsuarioDB.tipo == "fletero").all()
+
+@router.get("/{fletero_id}")
 def obtener_fletero(fletero_id: int, db: Session = Depends(get_db)):
     fletero = db.query(UsuarioDB).filter(UsuarioDB.id == fletero_id, UsuarioDB.tipo == "fletero").first()
     if not fletero:
@@ -102,7 +108,7 @@ def obtener_fletero(fletero_id: int, db: Session = Depends(get_db)):
         "estado_aprobacion": "En estado de aprobación (Revisando documentación)"
     }
 
-@router.put("/fleteros/{fletero_id}")
+@router.put("/{fletero_id}")
 def actualizar_fletero(fletero_id: int, datos: ActualizarFleteroIn, db: Session = Depends(get_db)):
     fletero = db.query(UsuarioDB).filter(UsuarioDB.id == fletero_id, UsuarioDB.tipo == "fletero").first()
     if not fletero:

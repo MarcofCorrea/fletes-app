@@ -26,6 +26,11 @@ def crear_mudanza(mudanza: MudanzaCreate, db: Session = Depends(get_db)):
     db.refresh(nueva_mudanza)
     return {"mensaje": "Mudanza publicada con éxito", "mudanza": nueva_mudanza}
 
+@router.get("", response_model=list)
+@router.get("/", response_model=list)
+def listar_mudanzas(db: Session = Depends(get_db)):
+    return db.query(MudanzaDB).all()
+
 @router.get("/cliente/{cliente_id}")
 def listar_mudanzas_por_cliente(cliente_id: int, db: Session = Depends(get_db)):
     mudanzas = db.query(MudanzaDB).filter(MudanzaDB.cliente_id == cliente_id).all()
