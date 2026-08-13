@@ -257,7 +257,6 @@
                 const contTraslados = document.getElementById("listaTrasladosAprobados");
                 if (!cont || !contTraslados) return;
 
-                // Mantener estado si el usuario está tipeando un monto o hora
                 const inputsActivos = {};
                 document.querySelectorAll("#listaMudanzas input").forEach(input => {
                     inputsActivos[input.id] = input.value;
@@ -269,6 +268,7 @@
                 const eliminadasSol = JSON.parse(localStorage.getItem(`fletero_sol_eliminadas_${fleteroIdActual}`) || "[]");
                 const eliminadasTras = JSON.parse(localStorage.getItem(`fletero_tras_eliminadas_${fleteroIdActual}`) || "[]");
                 const aprobadasPorFletero = JSON.parse(localStorage.getItem(`fletero_aprobadas_manual_${fleteroIdActual}`) || "[]");
+                const finalizadasFleteroLocal = JSON.parse(localStorage.getItem(`fletero_finalizadas_${fleteroIdActual}`) || "[]");
 
                 let arrayAprobadas = [];
 
@@ -306,7 +306,7 @@
                     }
 
                     const ofertasDeEstaMudanza = ofertas.filter(o => o.mudanza_id == m.id && o.fletero_id == fleteroIdActual);
-                    ofertasDeEstaMudanza.sort((a, b) => b.id - a.id); // Más reciente primero
+                    ofertasDeEstaMudanza.sort((a, b) => b.id - a.id);
 
                     const ofertaAceptadaCliente = ofertasDeEstaMudanza.find(o => o.estado === 'aceptada' || o.estado === 'aprobada');
                     const clienteAcepto = !!ofertaAceptadaCliente;
@@ -314,14 +314,36 @@
                     if (aprobadasPorFletero.includes(m.id)) {
                         if (eliminadasTras.includes(m.id)) continue;
                         const montoAcordado = ofertaAceptadaCliente ? ofertaAceptadaCliente.monto_oferta : '0';
-                        const estaPagado = m.estado_pago === "pagado"; 
+                        const estaPagado = m.estado_pago === "pagado" || m.estado === 'finalizada'; 
+                        const estaFinalizadaFletero = finalizadasFleteroLocal.includes(m.id);
                         
-                        let contactoClienteHtml = estaPagado ? `<a href="https://wa.me/${telefonoCliente.replace(/\D/g, '')}" target="_blank" class="text-emerald-700 font-bold underline">💬 WhatsApp (${telefonoCliente})</a>` : `<span class="text-amber-700 italic">🔒 Oculto hasta que el cliente abone</span>`;
+                        let contactoClienteHtml = `<span class="text-amber-700 italic">🔒 Oculto hasta que el cliente abone</span>`;
+                        if (estaPagado && telefonoCliente && telefonoCliente !== "No disponible") {
+                            let telLimpio = telefonoCliente.replace(/\D/g, '');
+                            contactoClienteHtml = `<a href="https://wa.me/${telLimpio}" target="_blank" class="text-emerald-700 font-bold underline">💬 Abrir WhatsApp (${telefonoCliente})</a>`;
+                        } else if (estaPagado) {
+                            contactoClienteHtml = `<span class="text-emerald-700 font-semibold">WhatsApp (No disponible)</span>`;
+                        }
+
                         const estadoPagoHtml = estaPagado ? '<span class="bg-emerald-200 text-emerald-900 px-2 py-1 rounded text-xs font-bold">🔒 Pago Retenido</span>' : '<span class="bg-amber-100 text-amber-800 px-2 py-1 rounded text-xs">⏳ Pendiente</span>';
 
                         const origenMap = encodeURIComponent(m.origen_direccion || '');
                         const destinoMap = encodeURIComponent(m.destino_direccion || '');
                         const mapEmbedUrl = `https://maps.google.com/maps?q=${origenMap}+to+${destinoMap}&output=embed`;
+
+                        let seccionFinalizacionFletero = "";
+                        if (estaPagado) {
+                            if (estaFinalizadaFletero) {
+                                seccionFinalizacionFletero = `<div class="bg-white p-2 rounded border text-xs text-emerald-700 font-semibold text-center">✅ Has confirmado la finalización. Esperando confirmación del cliente.</div>`;
+                            } else {
+                                seccionFinalizacionFletero = `
+                                    <div class="space-y-1.5 pt-2 border-t">
+                                        <button onclick="marcarComoFinalizadoFletero(${m.id})" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded text-xs font-semibold shadow">🏁 Confirmar Finalización (Fletero)</button>
+                                        <p class="text-[10px] text-slate-500 italic text-center leading-tight">⚠️ Nota: Por más que aprietes este botón, para liberar los fondos definitivamente también es necesario que el cliente confirme la finalización desde su panel.</p>
+                                    </div>
+                                `;
+                            }
+                        }
 
                         arrayAprobadas.push({
                             timestamp: new Date(`${fechaOrdenKey}T${horaOrdenKey}`).getTime(),
@@ -336,6 +358,7 @@
                                     </div>
                                     <div class="text-xs">📍 Origen: ${m.origen_direccion} ➔ Destino: ${m.destino_direccion}</div>
                                     <div class="flex justify-between text-xs pt-1"><span>💰 $${montoAcordado}</span> ${estadoPagoHtml}</div>
+                                    ${seccionFinalizacionFletero}
                                     <div class="mt-2 rounded-lg overflow-hidden border border-emerald-300">
                                         <iframe width="100%" height="150" style="border:0;" loading="lazy" src="${mapEmbedUrl}"></iframe>
                                     </div>
@@ -426,6 +449,16 @@
             const aprobadas = JSON.parse(localStorage.getItem(`fletero_aprobadas_manual_${fleteroIdActual}`) || "[]");
             if (!aprobadas.includes(mudanzaId)) { aprobadas.push(mudanzaId); localStorage.setItem(`fletero_aprobadas_manual_${fleteroIdActual}`, JSON.stringify(aprobadas)); }
             await fetch(`${API_URL}/ofertas/${ofertaId}/aceptar`, { method: "PUT", headers: { "Content-Type": "application/json" } });
+            cargarDatosDashboard();
+        }
+
+        function marcarComoFinalizadoFletero(mudanzaId) {
+            let finalizadas = JSON.parse(localStorage.getItem(`fletero_finalizadas_${fleteroIdActual}`) || "[]");
+            if (!finalizadas.includes(mudanzaId)) {
+                finalizadas.push(mudanzaId);
+                localStorage.setItem(`fletero_finalizadas_${fleteroIdActual}`, JSON.stringify(finalizadas));
+            }
+            alert("¡Has confirmado la finalización del servicio! Recuerda que para liberar los fondos de forma definitiva, el cliente también debe confirmarlo desde su panel.");
             cargarDatosDashboard();
         }
 
