@@ -263,6 +263,7 @@
         let clienteIdActual = localStorage.getItem("clienteId") ? parseInt(localStorage.getItem("clienteId")) : null;
         let datosClienteActual = localStorage.getItem("datosCliente") ? JSON.parse(localStorage.getItem("datosCliente")) : null;
         let ultimoEstadoClienteJson = "";
+        let clienteCargandoDatos = false;
 
         window.addEventListener("DOMContentLoaded", async () => {
             const urlParams = new URLSearchParams(window.location.search);
@@ -294,10 +295,13 @@
                     cargarMisMudanzas();
                 }
 
-                // Sincronización automática optimizada a 6 segundos para evitar parpadeos
-                setInterval(() => {
+                // Sincronización automática optimizada a 6 segundos con bloqueo anti-saturación
+                setInterval(async () => {
                     if (document.getElementById("vistaDashboardCliente").style.display !== "none") {
-                        cargarMisMudanzas();
+                        if (clienteCargandoDatos) return;
+                        clienteCargandoDatos = true;
+                        await cargarMisMudanzas();
+                        clienteCargandoDatos = false;
                     }
                 }, 6000);
             } else {
@@ -322,9 +326,12 @@
                 document.getElementById("vistaDashboardCliente").style.display = "flex";
                 cargarMisMudanzas();
 
-                setInterval(() => {
+                setInterval(async () => {
                     if (document.getElementById("vistaDashboardCliente").style.display !== "none") {
-                        cargarMisMudanzas();
+                        if (clienteCargandoDatos) return;
+                        clienteCargandoDatos = true;
+                        await cargarMisMudanzas();
+                        clienteCargandoDatos = false;
                     }
                 }, 6000);
             } catch (e) {
@@ -428,9 +435,12 @@
                     document.getElementById("vistaDashboardCliente").style.display = "flex";
                     cargarMisMudanzas();
 
-                    setInterval(() => {
+                    setInterval(async () => {
                         if (document.getElementById("vistaDashboardCliente").style.display !== "none") {
-                            cargarMisMudanzas();
+                            if (clienteCargandoDatos) return;
+                            clienteCargandoDatos = true;
+                            await cargarMisMudanzas();
+                            clienteCargandoDatos = false;
                         }
                     }, 6000);
                 } else { alert("Error: " + (result.detail || "Datos incorrectos")); }

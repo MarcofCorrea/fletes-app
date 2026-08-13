@@ -154,6 +154,7 @@
 
         let fleteroIdActual = localStorage.getItem("fleteroId");
         let ultimoEstadoFleteroJson = "";
+        let fleteroCargandoDatos = false;
 
         function cambiarTabAuth(tab) {
             const loginDiv = document.getElementById("subTabFletero-login");
@@ -352,6 +353,29 @@
                             }
                         }
 
+                        let seccionCalificacionFletero = "";
+                        if (estaFinalizadaFletero && estaPagado) {
+                            const yaCalificoCli = localStorage.getItem(`reseñas_mudanza_${m.id}_fletero`);
+                            if (yaCalificoCli) {
+                                seccionCalificacionFletero = `<div class="bg-white p-2 rounded border text-xs text-emerald-700 font-semibold mt-2">✅ Ya valoraste a este cliente.</div>`;
+                            } else {
+                                seccionCalificacionFletero = `
+                                    <div class="bg-white p-3 rounded-lg border border-amber-200 space-y-2 mt-2 text-xs">
+                                        <div class="font-bold text-slate-700">⭐ Valora al Cliente (${nombreCliente}):</div>
+                                        <div class="flex gap-1" id="estrellas_f_${m.id}">
+                                            <span onclick="seleccionarEstrellasF(${m.id}, 1)" class="cursor-pointer text-slate-300 text-lg hover:text-amber-400 star-f-${m.id}">★</span>
+                                            <span onclick="seleccionarEstrellasF(${m.id}, 2)" class="cursor-pointer text-slate-300 text-lg hover:text-amber-400 star-f-${m.id}">★</span>
+                                            <span onclick="seleccionarEstrellasF(${m.id}, 3)" class="cursor-pointer text-slate-300 text-lg hover:text-amber-400 star-f-${m.id}">★</span>
+                                            <span onclick="seleccionarEstrellasF(${m.id}, 4)" class="cursor-pointer text-slate-300 text-lg hover:text-amber-400 star-f-${m.id}">★</span>
+                                            <span onclick="seleccionarEstrellasF(${m.id}, 5)" class="cursor-pointer text-slate-300 text-lg hover:text-amber-400 star-f-${m.id}">★</span>
+                                        </div>
+                                        <input type="hidden" id="val_estrellas_f_${m.id}" value="5">
+                                        <textarea id="comentario_f_${m.id}" placeholder="¿Cómo fue tu experiencia con el cliente?" class="w-full p-1.5 border rounded text-xs bg-slate-50"></textarea>
+                                        <button onclick="enviarCalificacionFletero(${m.id}, ${m.cliente_id})" class="w-full bg-emerald-600 text-white py-1.5 rounded font-semibold">Enviar Valoración</button>
+                                    </div>`;
+                            }
+                        }
+
                         arrayAprobadas.push({
                             timestamp: new Date(`${fechaOrdenKey}T${horaOrdenKey}`).getTime(),
                             html: `
@@ -366,6 +390,7 @@
                                     <div class="text-xs">📍 Origen: ${m.origen_direccion} ➔ Destino: ${m.destino_direccion}</div>
                                     <div class="flex justify-between text-xs pt-1"><span>💰 $${montoAcordado}</span> ${estadoPagoHtml}</div>
                                     ${seccionFinalizacionFletero}
+                                    ${seccionCalificacionFletero}
                                     <div class="mt-2 rounded-lg overflow-hidden border border-emerald-300">
                                         <iframe width="100%" height="150" style="border:0;" loading="lazy" src="${mapEmbedUrl}"></iframe>
                                     </div>
@@ -469,6 +494,28 @@
             cargarDatosDashboard();
         }
 
+        function seleccionarEstrellasF(mudanzaId, cantidad) {
+            document.getElementById(`val_estrellas_f_${mudanzaId}`).value = cantidad;
+            const estrellas = document.querySelectorAll(`.star-f-${mudanzaId}`);
+            estrellas.forEach((star, index) => {
+                if (index < cantidad) star.classList.add("text-amber-400");
+                else star.classList.remove("text-amber-400");
+            });
+        }
+
+        function enviarCalificacionFletero(mudanzaId, clienteId) {
+            const estrellas = document.getElementById(`val_estrellas_f_${mudanzaId}`).value;
+            const comentario = document.getElementById(`comentario_f_${mudanzaId}`).value;
+            const nuevaReseña = { autor: "Fletero", estrellas: parseInt(estrellas), comentario: comentario || "Sin comentarios", fecha: new Date().toLocaleDateString() };
+
+            let reseñasCliente = JSON.parse(localStorage.getItem(`reseñas_usuario_cliente_${clienteId}`) || "[]");
+            reseñasCliente.push(nuevaReseña);
+            localStorage.setItem(`reseñas_usuario_cliente_${clienteId}`, JSON.stringify(reseñasCliente));
+            localStorage.setItem(`reseñas_mudanza_${mudanzaId}_fletero`, "true");
+            alert("¡Valoración enviada con éxito!");
+            cargarDatosDashboard();
+        }
+
         function cambiarTabDashboard(s) { 
             document.getElementById("seccionSolicitudes").style.display = s==='solicitudes' ? 'block' : 'none';
             document.getElementById("seccionTraslados").style.display = s==='traslados' ? 'block' : 'none';
@@ -568,9 +615,13 @@
             document.getElementById("pantallaDashboard").style.display="flex"; 
             cargarDatosDashboard(); 
 
-            setInterval(() => {
+            // Sincronización automática a 6s con bloqueo anti-saturación
+            setInterval(async () => {
                 if (document.getElementById("pantallaDashboard").style.display !== "none") {
-                    cargarDatosDashboard();
+                    if (fleteroCargandoDatos) return;
+                    fleteroCargandoDatos = true;
+                    await cargarDatosDashboard();
+                    fleteroCargandoDatos = false;
                 }
             }, 6000);
         }
