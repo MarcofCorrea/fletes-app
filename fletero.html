@@ -606,8 +606,26 @@
 
         function cerrarModalReseñas() { document.getElementById("modalReseñas").style.display = "none"; }
 
-        function eliminarTarjeta(mId) { document.getElementById(`tarjeta_mudanza_${mId}`)?.remove(); }
-        function eliminarTarjetaAprobada(mId) { document.getElementById(`tarjeta_traslado_${mId}`)?.remove(); }
+        async function eliminarTarjeta(mId) { 
+            document.getElementById(`tarjeta_mudanza_${mId}`)?.remove(); 
+            try {
+                await fetch(`${API_URL}/mudanzas/${mId}`, {
+                    method: "DELETE",
+                    headers: { "Content-Type": "application/json" }
+                });
+            } catch (e) {}
+        }
+
+        async function eliminarTarjetaAprobada(mId) { 
+            document.getElementById(`tarjeta_traslado_${mId}`)?.remove(); 
+            try {
+                await fetch(`${API_URL}/mudanzas/${mId}`, {
+                    method: "DELETE",
+                    headers: { "Content-Type": "application/json" }
+                });
+            } catch (e) {}
+        }
+
         function cerrarSesion() { localStorage.clear(); location.reload(); }
 
         if(fleteroIdActual) { 

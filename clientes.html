@@ -900,11 +900,18 @@
             }
         }
 
-        function eliminarTarjeta(mId) {
+        async function eliminarTarjeta(mId) {
             let idClienteEliminar = parseInt(clienteIdActual) || 1;
             const eliminadas = JSON.parse(localStorage.getItem(`cliente_eliminadas_${idClienteEliminar}`) || "[]");
             if (!eliminadas.includes(mId)) { eliminadas.push(mId); localStorage.setItem(`cliente_eliminadas_${idClienteEliminar}`, JSON.stringify(eliminadas)); }
             ['sol', 'of'].forEach(tipo => document.getElementById(`tarjeta_${tipo}_${mId}`)?.remove());
+
+            try {
+                await fetch(`${API_URL}/mudanzas/${mId}`, {
+                    method: "DELETE",
+                    headers: { "Content-Type": "application/json" }
+                });
+            } catch (e) {}
         }
 
         async function aceptarOferta(ofertaId) {
