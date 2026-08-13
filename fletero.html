@@ -359,7 +359,7 @@
                         if (estaFinalizadaFletero && estaPagado) {
                             const yaCalificoCli = localStorage.getItem(`reseñas_mudanza_${m.id}_fletero`);
                             if (yaCalificoCli) {
-                                seccionCalificacionFletero = `<div class="bg-white p-2 rounded border text-xs text-emerald-700 font-semibold mt-2">✅ Ya valoraste a este cliente.</div>`;
+                                seccionCalificacionFletero = `<div class="bg-white p-2 rounded border text-xs text-emerald-700 font-semibold text-center mt-2">✅ Comentario enviado</div>`;
                             } else {
                                 seccionCalificacionFletero = `
                                     <div class="bg-white p-3 rounded-lg border border-amber-200 space-y-2 mt-2 text-xs">
@@ -524,7 +524,7 @@
             reseñasCliente.push(nuevaReseña);
             localStorage.setItem(`reseñas_usuario_cliente_${clienteId}`, JSON.stringify(reseñasCliente));
             localStorage.setItem(`reseñas_mudanza_${mudanzaId}_fletero`, "true");
-            alert("¡Valoración enviada con éxito!");
+            
             cargarDatosDashboard();
         }
 
