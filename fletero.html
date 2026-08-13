@@ -48,6 +48,8 @@
                         <!-- DOCUMENTACIÓN -->
                         <div class="border-t pt-2 space-y-2 text-xs">
                             <label class="font-bold text-slate-700 block">Documentación requerida:</label>
+                            <label class="text-slate-600 block">DNI Frente (Fletero): <input type="file" id="regDniFrente" accept=".jpg,.png" class="w-full p-1 border rounded bg-white mt-1"></label>
+                            <label class="text-slate-600 block">DNI Dorso (Fletero): <input type="file" id="regDniDorso" accept=".jpg,.png" class="w-full p-1 border rounded bg-white mt-1"></label>
                             <label class="text-slate-600 block">Cédula Verde/Azul (Frente): <input type="file" id="regCedulaFrente" accept=".jpg,.png" class="w-full p-1 border rounded bg-white mt-1"></label>
                             <label class="text-slate-600 block">Cédula Verde/Azul (Dorso): <input type="file" id="regCedulaDorso" accept=".jpg,.png" class="w-full p-1 border rounded bg-white mt-1"></label>
                             <label class="text-slate-600 block">Carnet de Conducir (Frente): <input type="file" id="regCarnetFrente" accept=".jpg,.png" class="w-full p-1 border rounded bg-white mt-1"></label>
@@ -173,6 +175,8 @@
 
         async function ejecutarRegistroFletero() {
             try {
+                const dniFrente = document.getElementById("regDniFrente").files[0];
+                const dniDorso = document.getElementById("regDniDorso").files[0];
                 const cedulaFrente = document.getElementById("regCedulaFrente").files[0];
                 const cedulaDorso = document.getElementById("regCedulaDorso").files[0];
                 const carnetFrente = document.getElementById("regCarnetFrente").files[0];
@@ -189,6 +193,8 @@
                     cbu_cvu: document.getElementById("regCbuCvu").value,
                     alias_bancario: document.getElementById("regAlias").value,
                     nombre_banco: document.getElementById("regBanco").value,
+                    dni_frente: dniFrente ? await convertirArchivoABase64(dniFrente) : "",
+                    dni_dorso: dniDorso ? await convertirArchivoABase64(dniDorso) : "",
                     cedula_frente: cedulaFrente ? await convertirArchivoABase64(cedulaFrente) : "",
                     cedula_dorso: cedulaDorso ? await convertirArchivoABase64(cedulaDorso) : "",
                     carnet_frente: carnetFrente ? await convertirArchivoABase64(carnetFrente) : "",
@@ -390,7 +396,7 @@
 
         async function enviarOferta(mId) {
             const monto = document.getElementById(`monto_${mId}`).value;
-            const hora = document.getElementById(`hora_${mId}`).value;
+            const hora = document.getElementById(`hora_${mId}$).value;
             if(!monto) return alert("Ingresa un monto");
             await fetch(`${API_URL}/ofertas/`, { 
                 method: "POST", headers: {"Content-Type":"application/json"}, 
