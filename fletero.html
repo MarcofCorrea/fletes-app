@@ -153,6 +153,7 @@
             : "https://fletes-app.onrender.com";
 
         let fleteroIdActual = localStorage.getItem("fleteroId");
+        let ultimoEstadoFleteroJson = "";
 
         function cambiarTabAuth(tab) {
             const loginDiv = document.getElementById("subTabFletero-login");
@@ -252,6 +253,12 @@
                 const mudanzas = await resM.json();
                 const ofertas = await resO.json();
                 const listaClientes = resCli && resCli.ok ? await resCli.json() : [];
+
+                const footprintActual = JSON.stringify({ mudanzas, ofertas, aprobadas: localStorage.getItem(`fletero_aprobadas_manual_${fleteroIdActual}`), finalizadas: localStorage.getItem(`fletero_finalizadas_${fleteroIdActual}`) });
+                if (footprintActual === ultimoEstadoFleteroJson) {
+                    return; 
+                }
+                ultimoEstadoFleteroJson = footprintActual;
                 
                 const cont = document.getElementById("listaMudanzas");
                 const contTraslados = document.getElementById("listaTrasladosAprobados");

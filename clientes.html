@@ -262,6 +262,7 @@
 
         let clienteIdActual = localStorage.getItem("clienteId") ? parseInt(localStorage.getItem("clienteId")) : null;
         let datosClienteActual = localStorage.getItem("datosCliente") ? JSON.parse(localStorage.getItem("datosCliente")) : null;
+        let ultimoEstadoClienteJson = "";
 
         window.addEventListener("DOMContentLoaded", async () => {
             const urlParams = new URLSearchParams(window.location.search);
@@ -491,6 +492,12 @@
 
                 const todasOfertas = await resO.json().catch(() => []);
                 const listaFleteros = await resF.json().catch(() => []);
+
+                const footprintActual = JSON.stringify({ rawData, todasOfertas, finalizadas: localStorage.getItem('mudanzas_finalizadas') });
+                if (footprintActual === ultimoEstadoClienteJson) {
+                    return; 
+                }
+                ultimoEstadoClienteJson = footprintActual;
                 
                 const contenedorSolicitudes = document.getElementById("listaMisMudanzas");
                 const contenedorOfertas = document.getElementById("listaOfertasCliente");
