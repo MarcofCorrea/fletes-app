@@ -95,7 +95,7 @@
                     </div>
                 </div>
 
-                <!-- SECCIÓN CUENTA (CLIENTE): 1. Billetera, 2. Métodos de pago, 3. Datos personales -->
+                <!-- SECCIÓN CUENTA (CLIENTE) -->
                 <div id="seccionCuenta" class="space-y-6" style="display: none;">
                     <div class="flex justify-between items-center border-b pb-2">
                         <h2 class="font-bold text-lg text-slate-900">👤 Mi Cuenta</h2>
@@ -260,8 +260,9 @@
         const mp = new MercadoPago("APP_USR-60bf29e6-7166-4f3a-b230-0aad7d628d81", { locale: "es-AR" });
         let paymentBrickController = null;
 
-        let clienteIdActual = sessionStorage.getItem("clienteId") ? parseInt(sessionStorage.getItem("clienteId")) : null;
-        let datosClienteActual = sessionStorage.getItem("datosCliente") ? JSON.parse(sessionStorage.getItem("datosCliente")) : null;
+        // Persistencia fija con localStorage para evitar pérdida de sesión al presionar F5
+        let clienteIdActual = localStorage.getItem("clienteId") ? parseInt(localStorage.getItem("clienteId")) : null;
+        let datosClienteActual = localStorage.getItem("datosCliente") ? JSON.parse(localStorage.getItem("datosCliente")) : null;
 
         window.addEventListener("DOMContentLoaded", async () => {
             const urlParams = new URLSearchParams(window.location.search);
@@ -275,23 +276,30 @@
                     try { await fetch(`${API_URL}/verificar-pago/${mId}`); } catch (e) {}
                 }
                 window.history.replaceState({}, document.title, window.location.pathname);
-                sessionStorage.setItem("abrir_seccion_ofertas", "true");
+                localStorage.setItem("abrir_seccion_ofertas", "true");
             }
 
-            const savedId = sessionStorage.getItem("clienteId");
-            const savedData = sessionStorage.getItem("datosCliente");
+            const savedId = localStorage.getItem("clienteId");
+            const savedData = localStorage.getItem("datosCliente");
             
             if (savedId && savedData) {
                 clienteIdActual = parseInt(savedId);
                 datosClienteActual = JSON.parse(savedData);
                 document.getElementById("contenedorAuth").style.display = "none";
                 document.getElementById("vistaDashboardCliente").style.display = "flex";
-                if (sessionStorage.getItem("abrir_seccion_ofertas") === "true") {
-                    sessionStorage.removeItem("abrir_seccion_ofertas");
+                if (localStorage.getItem("abrir_seccion_ofertas") === "true") {
+                    localStorage.removeItem("abrir_seccion_ofertas");
                     cambiarTabDashboard('ofertas');
                 } else {
                     cargarMisMudanzas();
                 }
+
+                // 🔄 Sincronización en tiempo real automática cada 4 segundos
+                setInterval(() => {
+                    if (document.getElementById("vistaDashboardCliente").style.display !== "none") {
+                        cargarMisMudanzas();
+                    }
+                }, 4000);
             } else {
                 document.getElementById("contenedorAuth").style.display = "flex";
                 document.getElementById("vistaDashboardCliente").style.display = "none";
@@ -308,16 +316,22 @@
                 const clientePrueba = clientes[0];
                 clienteIdActual = clientePrueba.id;
                 datosClienteActual = clientePrueba;
-                sessionStorage.setItem("clienteId", clienteIdActual);
-                sessionStorage.setItem("datosCliente", JSON.stringify(datosClienteActual));
+                localStorage.setItem("clienteId", clienteIdActual);
+                localStorage.setItem("datosCliente", JSON.stringify(datosClienteActual));
                 document.getElementById("contenedorAuth").style.display = "none";
                 document.getElementById("vistaDashboardCliente").style.display = "flex";
                 cargarMisMudanzas();
+
+                setInterval(() => {
+                    if (document.getElementById("vistaDashboardCliente").style.display !== "none") {
+                        cargarMisMudanzas();
+                    }
+                }, 4000);
             } catch (e) {
                 clienteIdActual = 1;
                 datosClienteActual = { id: 1, nombre: "Cliente Demo", email: "cliente@demo.com", telefono: "3511234567" };
-                sessionStorage.setItem("clienteId", clienteIdActual);
-                sessionStorage.setItem("datosCliente", JSON.stringify(datosClienteActual));
+                localStorage.setItem("clienteId", clienteIdActual);
+                localStorage.setItem("datosCliente", JSON.stringify(datosClienteActual));
                 document.getElementById("contenedorAuth").style.display = "none";
                 document.getElementById("vistaDashboardCliente").style.display = "flex";
                 cargarMisMudanzas();
@@ -408,11 +422,17 @@
                 if (res.ok) {
                     clienteIdActual = result.cliente.id;
                     datosClienteActual = result.cliente;
-                    sessionStorage.setItem("clienteId", clienteIdActual);
-                    sessionStorage.setItem("datosCliente", JSON.stringify(datosClienteActual));
+                    localStorage.setItem("clienteId", clienteIdActual);
+                    localStorage.setItem("datosCliente", JSON.stringify(datosClienteActual));
                     document.getElementById("contenedorAuth").style.display = "none";
                     document.getElementById("vistaDashboardCliente").style.display = "flex";
                     cargarMisMudanzas();
+
+                    setInterval(() => {
+                        if (document.getElementById("vistaDashboardCliente").style.display !== "none") {
+                            cargarMisMudanzas();
+                        }
+                    }, 4000);
                 } else { alert("Error: " + (result.detail || "Datos incorrectos")); }
             } catch (err) { alert("Error de conexión con el servidor"); }
         }
@@ -864,7 +884,7 @@
                 });
                 if (res.ok) {
                     datosClienteActual.nombre = nuevoNombre; datosClienteActual.email = nuevoEmail; datosClienteActual.telefono = nuevoTelefono;
-                    sessionStorage.setItem("datosCliente", JSON.stringify(datosClienteActual));
+                    localStorage.setItem("datosCliente", JSON.stringify(datosClienteActual));
                     alert("¡Perfil actualizado con éxito!");
                 }
             } catch(e) {}
@@ -888,7 +908,7 @@
             } catch (err) {}
         }
 
-        function cerrarSesionCliente() { sessionStorage.clear(); location.reload(); }
+        function cerrarSesionCliente() { localStorage.clear(); location.reload(); }
     </script>
 </body>
 </html>

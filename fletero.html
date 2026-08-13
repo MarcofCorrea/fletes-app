@@ -137,7 +137,8 @@
             ? "http://127.0.0.1:8000" 
             : "https://fletes-app.onrender.com";
 
-        let fleteroIdActual = sessionStorage.getItem("fleteroId");
+        // Persistencia fija con localStorage para evitar pérdida de sesión al presionar F5
+        let fleteroIdActual = localStorage.getItem("fleteroId");
 
         function cambiarTabAuth(tab) {
             const loginDiv = document.getElementById("subTabFletero-login");
@@ -165,8 +166,8 @@
             const data = await res.json();
             if(res.ok) { 
                 fleteroIdActual = data.fletero.id; 
-                sessionStorage.setItem("fleteroId", fleteroIdActual); 
-                sessionStorage.setItem("datosFletero", JSON.stringify(data.fletero));
+                localStorage.setItem("fleteroId", fleteroIdActual); 
+                localStorage.setItem("datosFletero", JSON.stringify(data.fletero));
                 location.reload(); 
             } else { alert("Error al iniciar sesión"); }
         }
@@ -326,7 +327,7 @@
         }
 
         function cargarDatosPerfil() {
-            const dataStr = sessionStorage.getItem("datosFletero");
+            const dataStr = localStorage.getItem("datosFletero");
             if (!dataStr) return;
             const fletero = JSON.parse(dataStr);
             document.getElementById("perfilNombreInput").value = fletero.nombre || "";
@@ -357,7 +358,7 @@
                     body: JSON.stringify(dataActualizada)
                 });
                 if (res.ok) {
-                    sessionStorage.setItem("datosFletero", JSON.stringify(dataActualizada));
+                    localStorage.setItem("datosFletero", JSON.stringify(dataActualizada));
                     alert("¡Perfil actualizado con éxito!");
                 }
             } catch(e) { alert("Error al actualizar"); }
@@ -376,12 +377,19 @@
 
         function eliminarTarjeta(mId) { document.getElementById(`tarjeta_mudanza_${mId}`)?.remove(); }
         function eliminarTarjetaAprobada(mId) { document.getElementById(`tarjeta_traslado_${mId}`)?.remove(); }
-        function cerrarSesion() { sessionStorage.clear(); location.reload(); }
+        function cerrarSesion() { localStorage.clear(); location.reload(); }
 
         if(fleteroIdActual) { 
             document.getElementById("pantallaAuth").style.display="none"; 
             document.getElementById("pantallaDashboard").style.display="flex"; 
             cargarDatosDashboard(); 
+
+            // 🔄 Sincronización en tiempo real automática cada 4 segundos para el fletero
+            setInterval(() => {
+                if (document.getElementById("pantallaDashboard").style.display !== "none") {
+                    cargarDatosDashboard();
+                }
+            }, 4000);
         }
     </script>
 </body>
