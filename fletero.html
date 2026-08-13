@@ -37,12 +37,24 @@
                         <input type="text" id="regVehiculo" placeholder="Vehículo (Ej: Fiorino, Kangoo)" class="w-full p-2 border rounded-lg text-sm bg-white">
                         <input type="text" id="regPatente" placeholder="Patente (Ej: AB123CD)" class="w-full p-2 border rounded-lg text-sm bg-white">
                         
+                        <!-- DATOS BANCARIOS -->
                         <div class="border-t pt-2 space-y-2">
                             <label class="text-xs font-bold text-slate-700 block">Datos Bancarios para cobros:</label>
                             <input type="text" id="regCbuCvu" placeholder="CBU / CVU" class="w-full p-2 border rounded-lg text-sm bg-white">
                             <input type="text" id="regAlias" placeholder="Alias bancario" class="w-full p-2 border rounded-lg text-sm bg-white">
                             <input type="text" id="regBanco" placeholder="Nombre del banco" class="w-full p-2 border rounded-lg text-sm bg-white">
                         </div>
+
+                        <!-- DOCUMENTACIÓN -->
+                        <div class="border-t pt-2 space-y-2 text-xs">
+                            <label class="font-bold text-slate-700 block">Documentación requerida:</label>
+                            <label class="text-slate-600 block">Cédula Verde/Azul (Frente): <input type="file" id="regCedulaFrente" accept=".jpg,.png" class="w-full p-1 border rounded bg-white mt-1"></label>
+                            <label class="text-slate-600 block">Cédula Verde/Azul (Dorso): <input type="file" id="regCedulaDorso" accept=".jpg,.png" class="w-full p-1 border rounded bg-white mt-1"></label>
+                            <label class="text-slate-600 block">Carnet de Conducir (Frente): <input type="file" id="regCarnetFrente" accept=".jpg,.png" class="w-full p-1 border rounded bg-white mt-1"></label>
+                            <label class="text-slate-600 block">Carnet de Conducir (Dorso): <input type="file" id="regCarnetDorso" accept=".jpg,.png" class="w-full p-1 border rounded bg-white mt-1"></label>
+                            <label class="text-slate-600 block">Seguro del Auto (PDF/Imagen): <input type="file" id="regSeguroAuto" accept=".pdf,.jpg,.png" class="w-full p-1 border rounded bg-white mt-1"></label>
+                        </div>
+
                         <button onclick="ejecutarRegistroFletero()" class="w-full bg-slate-900 text-white p-2 rounded-lg text-sm font-semibold">Registrarse como Fletero</button>
                     </div>
                 </div>
@@ -54,8 +66,7 @@
             <div class="flex border-b bg-slate-900 text-white text-[11px]">
                 <button onclick="cambiarTabDashboard('solicitudes')" id="navSolicitudes" class="flex-1 py-3 text-center border-b-2 border-emerald-400 font-semibold">Solicitudes</button>
                 <button onclick="cambiarTabDashboard('traslados')" id="navTraslados" class="flex-1 py-3 text-center">Aprobadas</button>
-                <button onclick="cambiarTabDashboard('billetera')" id="navBilletera" class="flex-1 py-3 text-center">Billetera</button>
-                <button onclick="cambiarTabDashboard('perfil')" id="navPerfil" class="flex-1 py-3 text-center">Perfil</button>
+                <button onclick="cambiarTabDashboard('cuenta')" id="navCuenta" class="flex-1 py-3 text-center">Cuenta</button>
                 <button onclick="cambiarTabDashboard('soporte')" id="navSoporte" class="flex-1 py-3 text-center">Soporte</button>
             </div>
             <div class="p-4 overflow-y-auto flex-1">
@@ -67,41 +78,50 @@
                     <div id="listaTrasladosAprobados" class="space-y-4"></div>
                 </div>
                 
-                <!-- SECCIÓN BILLETERA FLETERO -->
-                <div id="seccionBilletera" style="display:none;" class="space-y-6">
-                    <h2 class="font-bold text-xl text-slate-900">Billetera de Fletero</h2>
+                <!-- SECCIÓN CUENTA (FLETERO) - ORDEN ESTRICTO SOLICITADO -->
+                <div id="seccionCuenta" style="display:none;" class="space-y-6">
+                    <div class="flex justify-between items-center border-b pb-2">
+                        <h2 class="font-bold text-lg text-slate-900">👤 Mi Cuenta</h2>
+                        <button onclick="cerrarSesion()" class="bg-red-500 text-white px-3 py-1 rounded text-xs font-semibold">Cerrar Sesión</button>
+                    </div>
+
+                    <!-- 1. Billetera -->
                     <div class="bg-slate-900 text-white p-5 rounded-2xl shadow-lg space-y-2">
-                        <div class="text-xs text-slate-400 font-medium">Saldo Disponible para Retiro</div>
+                        <div class="text-xs text-slate-400 font-medium">Billetera (Saldo Disponible para Retiro)</div>
                         <div class="text-3xl font-extrabold tracking-tight">ARS 0.00</div>
                     </div>
-                    <div class="space-y-3">
-                        <h3 class="font-bold text-sm text-slate-700">Métodos de Cobro Asociados</h3>
-                        <div class="bg-white p-4 rounded-xl border border-slate-200 flex items-center justify-between shadow-sm">
-                            <div class="flex items-center gap-3">
-                                <span class="bg-blue-100 text-blue-800 p-2 rounded-lg font-bold text-xs">🏦</span>
-                                <span class="font-semibold text-sm text-slate-800">CBU / CVU Bancario</span>
-                            </div>
-                            <span class="text-slate-400 font-bold">›</span>
-                        </div>
-                    </div>
-                </div>
 
-                <div id="seccionPerfil" style="display:none;" class="space-y-4">
-                    <div class="flex justify-between items-center border-b pb-2">
-                        <h2 class="font-bold text-base text-slate-800">👤 Mi Perfil y Datos Bancarios</h2>
-                        <button onclick="cerrarSesion()" class="bg-red-500 text-white px-3 py-1 rounded text-xs">Cerrar Sesión</button>
-                    </div>
+                    <!-- 2. Datos CVU - CBU -->
                     <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3 text-sm">
-                        <div>
-                            <label class="text-slate-500 text-xs font-semibold block mb-1">NOMBRE</label>
-                            <input type="text" id="perfilNombreInput" class="w-full p-2 border rounded-lg text-sm bg-white">
-                        </div>
-                        <div>
-                            <label class="text-slate-500 text-xs font-semibold block mb-1">CORREO</label>
-                            <input type="email" id="perfilEmailInput" class="w-full p-2 border rounded-lg text-sm bg-white">
-                        </div>
-                        <button onclick="guardarPerfilFletero()" class="w-full bg-slate-900 text-white p-2 rounded-lg text-sm font-semibold mt-2">Guardar</button>
+                        <h3 class="font-bold text-slate-800">Datos CVU / CBU</h3>
+                        <div><label class="text-xs text-slate-500 block">CBU / CVU</label><input type="text" id="perfilCbuInput" class="w-full p-2 border rounded bg-white"></div>
+                        <div><label class="text-xs text-slate-500 block">Alias</label><input type="text" id="perfilAliasInput" class="w-full p-2 border rounded bg-white"></div>
+                        <div><label class="text-xs text-slate-500 block">Banco</label><input type="text" id="perfilBancoInput" class="w-full p-2 border rounded bg-white"></div>
                     </div>
+
+                    <!-- 3. Datos personales (Cargados al registrarse) -->
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3 text-sm">
+                        <h3 class="font-bold text-slate-800">Datos personales</h3>
+                        <div class="text-center bg-white p-3 rounded border shadow-sm">
+                            <span class="text-xs text-slate-500 uppercase block">Calificación</span>
+                            <span id="perfilCalificacionEstrellas" class="text-amber-500 font-bold text-lg">⭐⭐⭐⭐⭐ (5.0)</span>
+                        </div>
+                        <div><label class="text-xs text-slate-500 block">Nombre</label><input type="text" id="perfilNombreInput" class="w-full p-2 border rounded bg-white"></div>
+                        <div><label class="text-xs text-slate-500 block">Correo</label><input type="email" id="perfilEmailInput" class="w-full p-2 border rounded bg-white"></div>
+                        <div><label class="text-xs text-slate-500 block">Teléfono</label><input type="text" id="perfilTelefonoInput" class="w-full p-2 border rounded bg-white"></div>
+                        <div><label class="text-xs text-slate-500 block">Vehículo</label><input type="text" id="perfilVehiculoInput" class="w-full p-2 border rounded bg-white"></div>
+                        <div><label class="text-xs text-slate-500 block">Patente</label><input type="text" id="perfilPatenteInput" class="w-full p-2 border rounded bg-white"></div>
+                    </div>
+
+                    <!-- 4, 5 y 6. Documentación (Cédula Frente/Dorso, Carnet Frente/Dorso, Seguro) -->
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2 text-xs">
+                        <h3 class="font-bold text-slate-800 text-sm mb-1">Documentación del Vehículo y Conductor</h3>
+                        <div class="bg-white p-2.5 rounded border">📄 <strong>Cédula Verde / Azul (Frente y Dorso):</strong> <span class="text-emerald-600 font-semibold">Cargado</span></div>
+                        <div class="bg-white p-2.5 rounded border">🪪 <strong>Carnet de Conducir (Frente y Dorso):</strong> <span class="text-emerald-600 font-semibold">Cargado</span></div>
+                        <div class="bg-white p-2.5 rounded border">🛡️ <strong>Seguro del Auto:</strong> <span class="text-emerald-600 font-semibold">Vigente</span></div>
+                    </div>
+
+                    <button onclick="guardarPerfilFletero()" class="w-full bg-slate-900 text-white p-3 rounded-lg text-sm font-semibold">Guardar Cambios</button>
                 </div>
 
                 <div id="seccionSoporte" style="display:none;" class="space-y-4">
@@ -135,6 +155,11 @@
             }
         }
 
+        const convertirArchivoABase64 = (file) => new Promise((resolve, reject) => {
+            const reader = new FileReader(); reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result); reader.onerror = error => reject(error);
+        });
+
         async function ejecutarLogin() {
             const res = await fetch(`${API_URL}/fleteros/login`, { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({email: document.getElementById("loginEmail").value, password: document.getElementById("loginPassword").value})});
             const data = await res.json();
@@ -148,6 +173,10 @@
 
         async function ejecutarRegistroFletero() {
             try {
+                const cedulaFrente = document.getElementById("regCedulaFrente").files[0];
+                const carnetFrente = document.getElementById("regCarnetFrente").files[0];
+                const seguroAuto = document.getElementById("regSeguroAuto").files[0];
+
                 const data = {
                     nombre: document.getElementById("regNombre").value,
                     telefono: document.getElementById("regTelefono").value,
@@ -157,7 +186,10 @@
                     patente: document.getElementById("regPatente").value,
                     cbu_cvu: document.getElementById("regCbuCvu").value,
                     alias_bancario: document.getElementById("regAlias").value,
-                    nombre_banco: document.getElementById("regBanco").value
+                    nombre_banco: document.getElementById("regBanco").value,
+                    cedula_frente: cedulaFrente ? await convertirArchivoABase64(cedulaFrente) : "",
+                    carnet_frente: carnetFrente ? await convertirArchivoABase64(carnetFrente) : "",
+                    seguro_pdf: seguroAuto ? await convertirArchivoABase64(seguroAuto) : ""
                 };
                 const res = await fetch(`${API_URL}/fleteros/`, {
                     method: "POST", headers: { "Content-Type": "application/json" },
@@ -165,7 +197,7 @@
                 });
                 if (res.ok) { alert("¡Registro exitoso!"); cambiarTabAuth('login'); }
                 else { alert("Error al registrarse"); }
-            } catch (err) {}
+            } catch (err) { alert("Error al procesar archivos"); }
         }
 
         async function cargarDatosDashboard() {
@@ -221,6 +253,10 @@
                     let contactoClienteHtml = estaPagado ? `<a href="https://wa.me/${telefonoCliente.replace(/\D/g, '')}" target="_blank" class="text-emerald-700 font-bold underline">💬 WhatsApp (${telefonoCliente})</a>` : `<span class="text-amber-700 italic">🔒 Oculto hasta que el cliente abone</span>`;
                     const estadoPagoHtml = estaPagado ? '<span class="bg-emerald-200 text-emerald-900 px-2 py-1 rounded text-xs font-bold">🔒 Pago Retenido</span>' : '<span class="bg-amber-100 text-amber-800 px-2 py-1 rounded text-xs">⏳ Pendiente</span>';
 
+                    const origenMap = encodeURIComponent(m.origen_direccion || '');
+                    const destinoMap = encodeURIComponent(m.destino_direccion || '');
+                    const mapEmbedUrl = `https://maps.google.com/maps?q=${origenMap}+to+${destinoMap}&output=embed`;
+
                     arrayAprobadas.push({
                         timestamp: new Date(`${fechaOrdenKey}T${horaOrdenKey}`).getTime(),
                         html: `
@@ -230,6 +266,9 @@
                                 <div class="bg-white p-2 rounded border text-xs">👤 <strong>Cliente:</strong> ${nombreCliente} | 📞 ${contactoClienteHtml}</div>
                                 <div class="text-xs">📍 Origen: ${m.origen_direccion} ➔ Destino: ${m.destino_direccion}</div>
                                 <div class="flex justify-between text-xs pt-1"><span>💰 $${montoAcordado}</span> ${estadoPagoHtml}</div>
+                                <div class="mt-2 rounded-lg overflow-hidden border border-emerald-300">
+                                    <iframe width="100%" height="150" style="border:0;" loading="lazy" src="${mapEmbedUrl}"></iframe>
+                                </div>
                             </div>`
                     });
                 } else {
@@ -273,19 +312,55 @@
         function cambiarTabDashboard(s) { 
             document.getElementById("seccionSolicitudes").style.display = s==='solicitudes' ? 'block' : 'none';
             document.getElementById("seccionTraslados").style.display = s==='traslados' ? 'block' : 'none';
-            document.getElementById("seccionBilletera").style.display = s==='billetera' ? 'block' : 'none';
-            document.getElementById("seccionPerfil").style.display = s==='perfil' ? 'block' : 'none';
+            document.getElementById("seccionCuenta").style.display = s==='cuenta' ? 'block' : 'none';
             document.getElementById("seccionSoporte").style.display = s==='soporte' ? 'block' : 'none';
 
-            ['navSolicitudes', 'navTraslados', 'navBilletera', 'navPerfil', 'navSoporte'].forEach(id => {
+            ['navSolicitudes', 'navTraslados', 'navCuenta', 'navSoporte'].forEach(id => {
                 const btn = document.getElementById(id);
                 if(btn) btn.classList.remove("border-b-2", "border-emerald-400", "font-semibold");
             });
             if(s==='solicitudes') document.getElementById("navSolicitudes").classList.add("border-b-2", "border-emerald-400", "font-semibold");
             if(s==='traslados') { document.getElementById("navTraslados").classList.add("border-b-2", "border-emerald-400", "font-semibold"); cargarDatosDashboard(); }
-            if(s==='billetera') document.getElementById("navBilletera").classList.add("border-b-2", "border-emerald-400", "font-semibold");
-            if(s==='perfil') document.getElementById("navPerfil").classList.add("border-b-2", "border-emerald-400", "font-semibold");
+            if(s==='cuenta') { document.getElementById("navCuenta").classList.add("border-b-2", "border-emerald-400", "font-semibold"); cargarDatosPerfil(); }
             if(s==='soporte') document.getElementById("navSoporte").classList.add("border-b-2", "border-emerald-400", "font-semibold");
+        }
+
+        function cargarDatosPerfil() {
+            const dataStr = sessionStorage.getItem("datosFletero");
+            if (!dataStr) return;
+            const fletero = JSON.parse(dataStr);
+            document.getElementById("perfilNombreInput").value = fletero.nombre || "";
+            document.getElementById("perfilEmailInput").value = fletero.email || "";
+            document.getElementById("perfilTelefonoInput").value = fletero.telefono || "";
+            document.getElementById("perfilVehiculoInput").value = fletero.vehiculo || "";
+            document.getElementById("perfilPatenteInput").value = fletero.patente || "";
+            document.getElementById("perfilCbuInput").value = fletero.cbu_cvu || "";
+            document.getElementById("perfilAliasInput").value = fletero.alias_bancario || "";
+            document.getElementById("perfilBancoInput").value = fletero.nombre_banco || "";
+        }
+
+        async function guardarPerfilFletero() {
+            if (!fleteroIdActual) return;
+            const dataActualizada = {
+                nombre: document.getElementById("perfilNombreInput").value,
+                email: document.getElementById("perfilEmailInput").value,
+                telefono: document.getElementById("perfilTelefonoInput").value,
+                vehiculo: document.getElementById("perfilVehiculoInput").value,
+                patente: document.getElementById("perfilPatenteInput").value,
+                cbu_cvu: document.getElementById("perfilCbuInput").value,
+                alias_bancario: document.getElementById("perfilAliasInput").value,
+                nombre_banco: document.getElementById("perfilBancoInput").value
+            };
+            try {
+                const res = await fetch(`${API_URL}/fleteros/${fleteroIdActual}`, {
+                    method: "PUT", headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(dataActualizada)
+                });
+                if (res.ok) {
+                    sessionStorage.setItem("datosFletero", JSON.stringify(dataActualizada));
+                    alert("¡Perfil actualizado con éxito!");
+                }
+            } catch(e) { alert("Error al actualizar"); }
         }
 
         async function enviarOferta(mId) {

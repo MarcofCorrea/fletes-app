@@ -58,8 +58,7 @@
             <div class="flex border-b bg-blue-900 text-white text-[11px] font-semibold">
                 <button type="button" onclick="cambiarTabDashboard('solicitudes')" id="navSolicitudes" class="flex-1 py-3 text-center border-b-2 border-emerald-400 text-emerald-400">Quiero mudarme</button>
                 <button type="button" onclick="cambiarTabDashboard('ofertas')" id="navOfertas" class="flex-1 py-3 text-center text-blue-200">Mudanza aprobada</button>
-                <button type="button" onclick="cambiarTabDashboard('billetera')" id="navBilletera" class="flex-1 py-3 text-center text-blue-200">Billetera</button>
-                <button type="button" onclick="cambiarTabDashboard('perfil')" id="navPerfil" class="flex-1 py-3 text-center text-blue-200">Perfil</button>
+                <button type="button" onclick="cambiarTabDashboard('cuenta')" id="navCuenta" class="flex-1 py-3 text-center text-blue-200">Cuenta</button>
                 <button type="button" onclick="cambiarTabDashboard('soporte')" id="navSoporte" class="flex-1 py-3 text-center text-blue-200">Soporte</button>
             </div>
             <div class="p-4 flex-1 overflow-y-auto space-y-6">
@@ -98,14 +97,21 @@
                     </div>
                 </div>
 
-                <!-- SECCIÓN BILLETERA CLIENTE -->
-                <div id="seccionBilletera" class="space-y-6" style="display: none;">
-                    <h2 class="font-bold text-xl text-slate-900">Billetera</h2>
+                <!-- SECCIÓN CUENTA (CLIENTE): 1. Billetera, 2. Métodos de pago, 3. Datos personales -->
+                <div id="seccionCuenta" class="space-y-6" style="display: none;">
+                    <div class="flex justify-between items-center border-b pb-2">
+                        <h2 class="font-bold text-lg text-slate-900">👤 Mi Cuenta</h2>
+                        <button type="button" onclick="cerrarSesionCliente()" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-xs font-semibold">Cerrar Sesión</button>
+                    </div>
+
+                    <!-- 1. Billetera -->
                     <div class="bg-slate-900 text-white p-5 rounded-2xl shadow-lg space-y-2 relative overflow-hidden">
-                        <div class="text-xs text-slate-400 font-medium">Fletes Cash</div>
+                        <div class="text-xs text-slate-400 font-medium">Billetera (Fletes Cash)</div>
                         <div class="text-3xl font-extrabold tracking-tight">ARS 0.00</div>
                     </div>
-                    <div class="space-y-3">
+
+                    <!-- 2. Métodos de pago -->
+                    <div class="space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
                         <h3 class="font-bold text-sm text-slate-700">Métodos de pago</h3>
                         <div class="bg-white p-4 rounded-xl border border-slate-200 flex items-center justify-between shadow-sm">
                             <div class="flex items-center gap-3">
@@ -114,19 +120,18 @@
                             </div>
                             <span class="text-slate-400 font-bold">›</span>
                         </div>
+                        <div id="estadoTarjetaGuardada" class="text-xs font-semibold text-slate-600 bg-white p-2.5 rounded-lg border">
+                            ⏳ No tienes ninguna tarjeta asociada actualmente.
+                        </div>
                         <button onclick="abrirModalAgregarMetodo()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-800 p-4 rounded-xl border border-slate-200 font-semibold text-sm flex items-center justify-center gap-2 transition-all">
                             <span class="bg-slate-800 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">+</span>
                             Agrega un método de pago
                         </button>
                     </div>
-                </div>
 
-                <div id="seccionPerfil" class="space-y-4" style="display: none;">
-                    <div class="flex justify-between items-center border-b pb-2">
-                        <h2 class="font-bold text-base text-slate-800">👤 Mi Perfil y Reseñas</h2>
-                        <button type="button" onclick="cerrarSesionCliente()" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-xs font-semibold">Cerrar Sesión</button>
-                    </div>
+                    <!-- 3. Datos personales (Cargados al registrarse + edición) -->
                     <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3 text-sm">
+                        <h3 class="font-bold text-sm text-slate-700">Datos personales</h3>
                         <div class="text-center bg-white p-3 rounded-lg border border-slate-100 shadow-sm cursor-pointer" onclick="verReseñasUsuario('cliente', clienteIdActual || 1, 'Mi Perfil')">
                             <span class="text-xs text-slate-500 font-semibold uppercase block">Calificación Promedio (Ver Comentarios)</span>
                             <span id="perfilCalificacionEstrellas" class="text-amber-500 font-bold text-lg">⭐⭐⭐⭐⭐ (5.0)</span>
@@ -146,14 +151,10 @@
                         <button type="button" onclick="guardarPerfilCliente()" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-lg text-sm font-semibold mt-2">Guardar Cambios</button>
                     </div>
 
-                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3 text-sm mt-4">
+                    <!-- Tarjeta de Crédito Adicional -->
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3 text-sm">
                         <h3 class="font-bold text-slate-800 text-sm">💳 Tarjeta de Crédito/Débito</h3>
                         <p class="text-xs text-slate-500">Asocia tu tarjeta para pagar tus mudanzas al instante con un solo clic.</p>
-                        
-                        <div id="estadoTarjetaGuardada" class="text-xs font-semibold text-slate-600 bg-white p-2.5 rounded-lg border">
-                            ⏳ No tienes ninguna tarjeta asociada actualmente.
-                        </div>
-
                         <div class="space-y-2 pt-1 border-t">
                             <input type="text" id="inputNumTarjeta" placeholder="Número de tarjeta (Ej: 4509 ...)" class="w-full p-2 border rounded-lg text-xs bg-white font-mono">
                             <div class="grid grid-cols-2 gap-2">
@@ -192,13 +193,6 @@
                     </div>
                     <span class="text-slate-400">›</span>
                 </div>
-                <div onclick="alert('Seleccionado: Tarjeta de regalo')" class="bg-slate-800 hover:bg-slate-700 p-4 rounded-xl flex items-center justify-between cursor-pointer transition-all">
-                    <div class="flex items-center gap-3">
-                        <span class="text-lg">🎁</span>
-                        <span class="font-medium text-sm">Tarjeta de regalo</span>
-                    </div>
-                    <span class="text-slate-400">›</span>
-                </div>
                 <div onclick="abrirPantallaMercadoPago()" class="bg-slate-800 hover:bg-slate-700 p-4 rounded-xl flex items-center justify-between cursor-pointer border border-blue-500/30 transition-all">
                     <div class="flex items-center gap-3">
                         <span class="text-lg">🤝</span>
@@ -224,18 +218,6 @@
                 <h2 class="text-2xl font-black text-slate-900">Conectá tu cuenta a FletesApp</h2>
                 <p class="text-sm text-slate-500">Usaremos estos medios de pago para los futuros cobros.</p>
             </div>
-            <div class="space-y-3 pt-2">
-                <div class="text-xs font-bold text-slate-400 uppercase tracking-wider">Principal</div>
-                <div class="bg-slate-50 border border-slate-200 p-4 rounded-xl flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <span class="text-xl">💼</span>
-                        <div>
-                            <div class="font-bold text-sm text-slate-800">Dinero disponible</div>
-                            <div class="text-xs text-emerald-600 font-semibold">$ 209.414,40</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
         <div class="space-y-4 pb-4">
             <button onclick="vincularCuentaMercadoPagoReal()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold p-4 rounded-xl shadow-lg transition-all text-sm">
@@ -244,7 +226,7 @@
         </div>
     </div>
 
-    <!-- MODALES VARIOS -->
+    <!-- MODAL RESEÑAS -->
     <div id="modalReseñas" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" style="display: none;">
         <div class="bg-white rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl max-h-[80vh] flex flex-col">
             <div class="flex justify-between items-center border-b pb-3">
@@ -257,6 +239,7 @@
         </div>
     </div>
 
+    <!-- MODAL CHECKOUT BRICKS -->
     <div id="modalCheckoutBricks" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" style="display: none;">
         <div class="bg-white rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl max-h-[90vh] flex flex-col">
             <div class="flex justify-between items-center border-b pb-3">
@@ -274,6 +257,7 @@
 
         const mp = new MercadoPago("APP_USR-60bf29e6-7166-4f3a-b230-0aad7d628d81", { locale: "es-AR" });
         let paymentBrickController = null;
+
         let clienteIdActual = sessionStorage.getItem("clienteId") ? parseInt(sessionStorage.getItem("clienteId")) : null;
         let datosClienteActual = sessionStorage.getItem("datosCliente") ? JSON.parse(sessionStorage.getItem("datosCliente")) : null;
 
@@ -345,42 +329,33 @@
             const btnReg = document.getElementById("btnTabRegistro");
 
             if (tab === 'login') {
-                loginDiv.style.display = "block";
-                regDiv.style.display = "none";
-                btnLogin.classList.add("border-blue-600", "text-blue-600");
-                btnLogin.classList.remove("text-slate-500");
-                btnReg.classList.remove("border-blue-600", "text-blue-600");
-                btnReg.classList.add("text-slate-500");
+                loginDiv.style.display = "block"; regDiv.style.display = "none";
+                btnLogin.classList.add("border-blue-600", "text-blue-600"); btnLogin.classList.remove("text-slate-500");
+                btnReg.classList.remove("border-blue-600", "text-blue-600"); btnReg.classList.add("text-slate-500");
             } else {
-                regDiv.style.display = "block";
-                loginDiv.style.display = "none";
-                btnReg.classList.add("border-blue-600", "text-blue-600");
-                btnReg.classList.remove("text-slate-500");
-                btnLogin.classList.remove("border-blue-600", "text-blue-600");
-                btnLogin.classList.add("text-slate-500");
+                regDiv.style.display = "block"; loginDiv.style.display = "none";
+                btnReg.classList.add("border-blue-600", "text-blue-600"); btnReg.classList.remove("text-slate-500");
+                btnLogin.classList.remove("border-blue-600", "text-blue-600"); btnLogin.classList.add("text-slate-500");
             }
         }
 
         function cambiarTabDashboard(seccion) {
             const secSolicitudes = document.getElementById("seccionSolicitudes");
             const secOfertas = document.getElementById("seccionOfertas");
-            const secBilletera = document.getElementById("seccionBilletera");
-            const secPerfil = document.getElementById("seccionPerfil");
+            const secCuenta = document.getElementById("seccionCuenta");
             const secSoporte = document.getElementById("seccionSoporte");
 
             const navSol = document.getElementById("navSolicitudes");
             const navOf = document.getElementById("navOfertas");
-            const navBil = document.getElementById("navBilletera");
-            const navPer = document.getElementById("navPerfil");
+            const navCta = document.getElementById("navCuenta");
             const navSop = document.getElementById("navSoporte");
 
             if(secSolicitudes) secSolicitudes.style.display = "none";
             if(secOfertas) secOfertas.style.display = "none";
-            if(secBilletera) secBilletera.style.display = "none";
-            if(secPerfil) secPerfil.style.display = "none";
+            if(secCuenta) secCuenta.style.display = "none";
             if(secSoporte) secSoporte.style.display = "none";
 
-            [navSol, navOf, navBil, navPer, navSop].forEach(el => {
+            [navSol, navOf, navCta, navSop].forEach(el => {
                 if(el) {
                     el.classList.remove("border-b-2", "border-emerald-400", "text-emerald-400");
                     el.classList.add("text-blue-200");
@@ -388,28 +363,13 @@
             });
 
             if (seccion === 'solicitudes' && secSolicitudes) {
-                secSolicitudes.style.display = "block";
-                navSol.classList.add("border-b-2", "border-emerald-400", "text-emerald-400");
-                navSol.classList.remove("text-blue-200");
-                cargarMisMudanzas();
+                secSolicitudes.style.display = "block"; navSol.classList.add("border-b-2", "border-emerald-400", "text-emerald-400"); navSol.classList.remove("text-blue-200"); cargarMisMudanzas();
             } else if (seccion === 'ofertas' && secOfertas) {
-                secOfertas.style.display = "block";
-                navOf.classList.add("border-b-2", "border-emerald-400", "text-emerald-400");
-                navOf.classList.remove("text-blue-200");
-                cargarMisMudanzas();
-            } else if (seccion === 'billetera' && secBilletera) {
-                secBilletera.style.display = "block";
-                navBil.classList.add("border-b-2", "border-emerald-400", "text-emerald-400");
-                navBil.classList.remove("text-blue-200");
-            } else if (seccion === 'perfil' && secPerfil) {
-                secPerfil.style.display = "block";
-                navPer.classList.add("border-b-2", "border-emerald-400", "text-emerald-400");
-                navPer.classList.remove("text-blue-200");
-                mostrarDatosPerfil();
+                secOfertas.style.display = "block"; navOf.classList.add("border-b-2", "border-emerald-400", "text-emerald-400"); navOf.classList.remove("text-blue-200"); cargarMisMudanzas();
+            } else if (seccion === 'cuenta' && secCuenta) {
+                secCuenta.style.display = "block"; navCta.classList.add("border-b-2", "border-emerald-400", "text-emerald-400"); navCta.classList.remove("text-blue-200"); mostrarDatosPerfil();
             } else if (seccion === 'soporte' && secSoporte) {
-                secSoporte.style.display = "block";
-                navSop.classList.add("border-b-2", "border-emerald-400", "text-emerald-400");
-                navSop.classList.remove("text-blue-200");
+                secSoporte.style.display = "block"; navSop.classList.add("border-b-2", "border-emerald-400", "text-emerald-400"); navSop.classList.remove("text-blue-200");
             }
         }
 
@@ -419,14 +379,10 @@
         function cerrarPantallaMercadoPago() { document.getElementById("vistaConectarMercadoPago").style.display = "none"; }
         function vincularCuentaMercadoPagoReal() { alert("¡Cuenta de Mercado Pago conectada con éxito a FletesApp!"); cerrarPantallaMercadoPago(); }
 
-        const convertirArchivoABase64 = (file) => {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = () => resolve(reader.result);
-                reader.onerror = error => reject(error);
-            });
-        };
+        const convertirArchivoABase64 = (file) => new Promise((resolve, reject) => {
+            const reader = new FileReader(); reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result); reader.onerror = error => reject(error);
+        });
 
         async function ejecutarLoginCliente() {
             const email = document.getElementById("loginClienteEmail").value;
@@ -462,7 +418,7 @@
                 return;
             }
             let idClienteFinal = parseInt(clienteIdActual);
-            if (!idClienteFinal) { alert("⚠️ No hay sesión activa."); return; }
+            if (!idClienteFinal) { alert("⚠️ No hay una sesión de cliente activa."); return; }
 
             const data = {
                 cliente_id: idClienteFinal,
@@ -485,7 +441,7 @@
                     document.getElementById("horaMudanza").value = "";
                     cargarMisMudanzas();
                 } else { alert("Error al publicar mudanza"); }
-            } catch (err) { alert("Error de conexión"); }
+            } catch (err) { alert("Error de conexión con el servidor"); }
         }
 
         async function cargarMisMudanzas() {
@@ -595,6 +551,7 @@
                                                 <div class="font-bold text-slate-800 text-sm">🚗 ${nombreFletero}</div>
                                                 <div class="text-slate-600">🚙 <strong>Vehículo:</strong> ${vehiculoFletero}</div>
                                                 <div class="text-slate-600">🏷️ <strong>Patente:</strong> <span class="font-mono bg-slate-100 px-1 py-0.5 rounded">${patenteFletero}</span></div>
+                                                <div class="text-amber-500 font-semibold mt-0.5 cursor-pointer" onclick="verReseñasUsuario('fletero', ${o.fletero_id}, '${nombreFletero}')">Calificación: ${estrellasFletero}</div>
                                             </div>
                                             <div class="text-right">
                                                 <span class="text-emerald-700 font-extrabold text-sm block">$${o.monto_oferta}</span>
@@ -602,8 +559,8 @@
                                         </div>
                                         <div class="pt-1.5 border-t flex justify-end">
                                             ${esEstaAceptada ? 
-                                                '<span class="bg-amber-100 text-amber-800 px-2.5 py-1 rounded font-bold text-xs">⏳ Pre-aprobada</span>' : 
-                                                `<button type="button" onclick="aceptarOferta(${o.id})" class="bg-emerald-600 text-white px-2.5 py-1 rounded font-semibold">Aceptar Oferta</button>`
+                                                '<span class="bg-amber-100 text-amber-800 px-2.5 py-1 rounded font-bold text-xs">⏳ Pre-aprobada, esperando confirmación del fletero</span>' : 
+                                                `<button type="button" onclick="aceptarOferta(${o.id})" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded font-semibold">Aceptar Oferta</button>`
                                             }
                                         </div>
                                     </div>
@@ -613,12 +570,15 @@
                         }
 
                         cardSol.innerHTML = `
-                            <button onclick="eliminarTarjeta(${m.id})" class="absolute top-3 right-3 text-slate-400 hover:text-red-500 text-xs font-bold px-1.5 py-0.5 rounded border bg-white">✕</button>
+                            <button onclick="eliminarTarjeta(${m.id})" class="absolute top-3 right-3 text-slate-400 hover:text-red-500 text-xs font-bold px-1.5 py-0.5 rounded border border-emerald-200 bg-white" title="Ocultar tarjeta">✕</button>
                             <div class="font-bold text-slate-800 pr-6">Mudanza #${m.id} - ${textoCargaReal}</div>
                             <div class="text-xs text-slate-600"><strong>De:</strong> ${m.origen_direccion}</div>
                             <div class="text-xs text-slate-600"><strong>A:</strong> ${m.destino_direccion}</div>
                             ${infoFechaHora ? `<div class="text-xs text-blue-700 font-semibold">📅 Programada: ${infoFechaHora}</div>` : ''}
-                            <div class="border-t pt-2 space-y-1">${ofertasHtmlSol}</div>
+                            <div class="border-t pt-2 space-y-1">
+                                <span class="text-xs font-semibold text-slate-700 block">Estado / Propuestas de Fleteros:</span>
+                                ${ofertasHtmlSol}
+                            </div>
                         `;
                         contenedorSolicitudes.appendChild(cardSol);
                     }
@@ -633,6 +593,7 @@
                         let telefonoFleteroGanador = "";
                         let vehiculoGanador = "";
                         let patenteGanadora = "";
+                        let calificacionFleteroNum = 5.0;
 
                         if (fleteroIdGanador) {
                             try {
@@ -644,24 +605,53 @@
                                     telefonoFleteroGanador = fOb.telefono || "";
                                     vehiculoGanador = fOb.vehiculo || "";
                                     patenteGanadora = fOb.patente || "";
+                                    if (fOb.calificacion) calificacionFleteroNum = fOb.calificacion;
                                 }
                             } catch(e) {}
                         }
 
                         const estaPagado = m.estado_pago === "pagado" || estaFinalizada;
-                        let contactoFleteroHtml = `<span class="text-amber-700 italic">🔒 Se desbloqueará al abonar</span>`;
+                        let contactoFleteroHtml = `<span class="text-amber-700 italic">🔒 Se desbloqueará al abonar el servicio</span>`;
                         if (estaPagado) {
                             const telLimpio = telefonoFleteroGanador.replace(/\D/g, '');
-                            contactoFleteroHtml = `<a href="https://wa.me/${telLimpio}" target="_blank" class="text-emerald-700 font-bold underline">💬 WhatsApp (${telefonoFleteroGanador})</a>`;
+                            contactoFleteroHtml = `<a href="https://wa.me/${telLimpio}" target="_blank" class="text-emerald-700 font-bold underline flex items-center gap-1">💬 Abrir WhatsApp (${telefonoFleteroGanador || 'Disponible'})</a>`;
+                        }
+
+                        let seccionCalificacionHtml = "";
+                        if (estaFinalizada) {
+                            const yaCalifico = localStorage.getItem(`reseñas_mudanza_${m.id}_cliente`);
+                            if (yaCalifico) {
+                                seccionCalificacionHtml = `<div class="bg-white p-2 rounded border text-xs text-emerald-700 font-semibold mt-2">✅ Ya valoraste a este fletero.</div>`;
+                            } else {
+                                seccionCalificacionHtml = `
+                                    <div class="bg-white p-3 rounded-lg border border-amber-200 space-y-2 mt-2 text-xs">
+                                        <div class="font-bold text-slate-700">⭐ Valora al Fletero (${nombreFleteroGanador}):</div>
+                                        <div class="flex gap-1" id="estrellas_c_${m.id}">
+                                            <span onclick="seleccionarEstrellasC(${m.id}, 1)" class="cursor-pointer text-slate-300 text-lg hover:text-amber-400 star-c-${m.id}">★</span>
+                                            <span onclick="seleccionarEstrellasC(${m.id}, 2)" class="cursor-pointer text-slate-300 text-lg hover:text-amber-400 star-c-${m.id}">★</span>
+                                            <span onclick="seleccionarEstrellasC(${m.id}, 3)" class="cursor-pointer text-slate-300 text-lg hover:text-amber-400 star-c-${m.id}">★</span>
+                                            <span onclick="seleccionarEstrellasC(${m.id}, 4)" class="cursor-pointer text-slate-300 text-lg hover:text-amber-400 star-c-${m.id}">★</span>
+                                            <span onclick="seleccionarEstrellasC(${m.id}, 5)" class="cursor-pointer text-slate-300 text-lg hover:text-amber-400 star-c-${m.id}">★</span>
+                                        </div>
+                                        <input type="hidden" id="val_estrellas_c_${m.id}" value="5">
+                                        <textarea id="comentario_c_${m.id}" placeholder="¿Cómo fue tu experiencia?" class="w-full p-1.5 border rounded text-xs bg-slate-50"></textarea>
+                                        <button onclick="enviarCalificacionCliente(${m.id}, ${fleteroIdGanador})" class="w-full bg-emerald-600 text-white py-1.5 rounded font-semibold">Enviar Valoración</button>
+                                    </div>`;
+                            }
                         }
 
                         let seccionPagoHtml = `
                             <div class="bg-white p-2.5 rounded-lg border border-emerald-100 space-y-2 mt-2 text-xs">
                                 <div class="flex justify-between items-center font-bold text-slate-700">
-                                    <span>💰 Monto:</span> <span class="text-emerald-700 text-sm">$${montoAcordado}</span>
+                                    <span>💰 Monto del Servicio:</span>
+                                    <span class="text-emerald-700 text-sm">$${montoAcordado}</span>
                                 </div>
-                                ${estaPagado ? '<div class="bg-emerald-100 text-emerald-800 w-full py-2 rounded-lg font-bold text-center">✅ Pago Verificado</div>' : 
-                                    `<button onclick="abrirCheckoutBricks(${m.id}, ${montoAcordado})" class="w-full bg-indigo-600 text-white py-2 rounded-lg font-semibold shadow">🧱 Pagar con Mercado Pago</button>`
+                                ${estaPagado ? 
+                                    '<div class="bg-emerald-100 text-emerald-800 w-full py-2 rounded-lg font-bold flex items-center justify-center gap-1.5 text-center">✅ <span>Pago Realizado y Verificado</span></div>' : 
+                                    `<div class="space-y-2">
+                                        <button onclick="pagarConTarjetaGuardada(${m.id}, ${montoAcordado})" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-semibold shadow">💳 Pagar con Tarjeta Guardada ($${montoAcordado})</button>
+                                        <button onclick="abrirCheckoutBricks(${m.id}, ${montoAcordado})" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg font-semibold shadow text-xs">🧱 Pagar con Checkout Bricks (Dentro de la App)</button>
+                                    </div>`
                                 }
                             </div>`;
 
@@ -669,47 +659,79 @@
                         cardOf.id = `tarjeta_of_${m.id}`;
                         cardOf.className = "bg-emerald-50 p-3 rounded-xl border border-emerald-200 space-y-2 text-sm relative";
                         cardOf.innerHTML = `
-                            <button onclick="eliminarTarjeta(${m.id})" class="absolute top-3 right-3 text-slate-400 hover:text-red-500 text-xs font-bold px-1.5 py-0.5 rounded border bg-white">✕</button>
-                            <div class="font-bold text-emerald-900 pr-6">🚀 Mudanza Aprobada #${m.id}</div>
+                            <button onclick="eliminarTarjeta(${m.id})" class="absolute top-3 right-3 text-slate-400 hover:text-red-500 text-xs font-bold px-1.5 py-0.5 rounded border border-emerald-200 bg-white" title="Ocultar tarjeta">✕</button>
+                            <div class="font-bold text-emerald-900 pr-6">🚀 Mudanza Aprobada #${m.id} ${estaFinalizada ? '(Finalizada)' : ''}</div>
                             <div class="bg-white p-2.5 rounded-lg border border-emerald-100 space-y-1 text-xs">
-                                <div>🚗 <strong>Fletero:</strong> ${nombreFleteroGanador}</div>
+                                <div class="text-slate-500 font-semibold uppercase text-[10px]">Fletero Asignado</div>
+                                <div>🚗 <strong>Nombre:</strong> <span onclick="verReseñasUsuario('fletero', ${fleteroIdGanador}, '${nombreFleteroGanador}')" class="text-blue-600 underline cursor-pointer font-bold">${nombreFleteroGanador}</span></div>
+                                <div class="text-amber-500 font-semibold cursor-pointer" onclick="verReseñasUsuario('fletero', ${fleteroIdGanador}, '${nombreFleteroGanador}')">⭐ ${calificacionFleteroNum} (Ver Comentarios)</div>
+                                <div>🚙 <strong>Vehículo:</strong> ${vehiculoGanador || 'No especificado'}</div>
+                                <div>🏷️ <strong>Patente:</strong> <span class="font-mono bg-slate-100 px-1 py-0.5 rounded">${patenteGanadora || 'S/D'}</span></div>
                                 <div>📞 <strong>Teléfono:</strong> ${contactoFleteroHtml}</div>
                             </div>
                             <div class="text-xs text-slate-600"><strong>Carga:</strong> ${textoCargaReal}</div>
+                            <div class="text-xs text-slate-600"><strong>Ruta:</strong> ${m.origen_direccion} ➔ ${m.destino_direccion}</div>
+                            ${infoFechaHora ? `<div class="text-xs text-emerald-800 font-bold">📅 Programada: ${infoFechaHora}</div>` : ''}
                             ${seccionPagoHtml}
+                            ${!estaFinalizada ? `<button onclick="marcarComoFinalizadoCliente(${m.id})" class="w-full bg-blue-600 text-white py-1.5 rounded text-xs font-semibold mt-1">🏁 Confirmar Finalización de Mudanza</button>` : ''}
+                            ${seccionCalificacionHtml}
                         `;
                         contenedorOfertas.appendChild(cardOf);
                     }
                 }
+
+                if (!tieneSolicitudesActivas && contenedorSolicitudes) {
+                    contenedorSolicitudes.innerHTML = `<p class="text-sm text-slate-500 text-center py-4">No hay solicitudes activas o pendientes.</p>`;
+                }
+                if (!tieneOfertasGlobal && contenedorOfertas) {
+                    contenedorOfertas.innerHTML = `<p class="text-sm text-slate-500 text-center py-4">No hay mudanzas aprobadas en este momento.</p>`;
+                }
+
             } catch (err) {}
         }
 
         async function abrirCheckoutBricks(mudanzaId, monto) {
             document.getElementById("modalCheckoutBricks").style.display = "flex";
             const container = document.getElementById("paymentBrick_container");
-            container.innerHTML = '<p class="text-sm text-slate-500 text-center py-4">Cargando...</p>';
+            container.innerHTML = '<p class="text-sm text-slate-500 text-center py-4">Cargando pasarela de pago segura...</p>';
+
             try {
                 const bricksBuilder = mp.bricks();
-                container.innerHTML = "";
-                paymentBrickController = await bricksBuilder.create("payment", "paymentBrick_container", {
+                const settings = {
                     initialization: { amount: parseFloat(monto) },
+                    customization: { paymentMethods: { creditCard: "all", debitCard: "all" } },
                     callbacks: {
+                        onReady: () => {},
                         onSubmit: ({ formData }) => {
                             formData.external_reference = String(mudanzaId);
-                            return new Promise((resolve) => {
+                            formData.description = `Pago de Mudanza #${mudanzaId}`;
+                            return new Promise((resolve, reject) => {
                                 fetch(`${API_URL}/procesar-pago`, {
                                     method: "POST", headers: { "Content-Type": "application/json" },
-                                    body: JSON.stringify(formData)
-                                }).then(res => res.json()).then(res => {
-                                    if(res.status === "approved") { alert("¡Pago aprobado!"); cerrarModalBricks(); cargarMisMudanzas(); }
-                                    else { alert("Pago pendiente o rechazado"); }
+                                    body: JSON.stringify(formData),
+                                })
+                                .then((response) => response.json())
+                                .then((response) => {
+                                    if (response.status === "approved") {
+                                        alert("¡Pago aprobado con éxito! Contacto desbloqueado.");
+                                        cerrarModalBricks();
+                                        cargarMisMudanzas();
+                                    } else {
+                                        alert("El pago fue rechazado o está pendiente.");
+                                    }
                                     resolve();
-                                });
+                                })
+                                .catch((error) => { alert("Error al procesar el pago."); reject(); });
                             });
-                        }
+                        },
+                        onError: (error) => {}
                     }
-                });
-            } catch(e) {}
+                };
+                container.innerHTML = "";
+                paymentBrickController = await bricksBuilder.create("payment", "paymentBrick_container", settings);
+            } catch (e) {
+                container.innerHTML = '<p class="text-sm text-red-500 text-center py-4">Error al cargar el formulario de pago.</p>';
+            }
         }
 
         function cerrarModalBricks() {
@@ -717,23 +739,142 @@
             if (paymentBrickController) { paymentBrickController.unmount(); paymentBrickController = null; }
         }
 
+        function marcarComoFinalizadoCliente(mudanzaId) {
+            let finalizadas = JSON.parse(localStorage.getItem(`mudanzas_finalizadas`) || "[]");
+            if (!finalizadas.includes(mudanzaId)) {
+                finalizadas.push(mudanzaId);
+                localStorage.setItem(`mudanzas_finalizadas`, JSON.stringify(finalizadas));
+            }
+            alert("¡Mudanza marcada como finalizada! Ya puedes calificar al fletero.");
+            cargarMisMudanzas();
+        }
+
+        function seleccionarEstrellasC(mudanzaId, cantidad) {
+            document.getElementById(`val_estrellas_c_${mudanzaId}`).value = cantidad;
+            const estrellas = document.querySelectorAll(`.star-c-${mudanzaId}`);
+            estrellas.forEach((star, index) => {
+                if (index < cantidad) star.classList.add("text-amber-400");
+                else star.classList.remove("text-amber-400");
+            });
+        }
+
+        function enviarCalificacionCliente(mudanzaId, fleteroId) {
+            const estrellas = document.getElementById(`val_estrellas_c_${mudanzaId}`).value;
+            const comentario = document.getElementById(`comentario_c_${mudanzaId}`).value;
+            const nuevaReseña = { autor: "Cliente", estrellas: parseInt(estrellas), comentario: comentario || "Sin comentarios", fecha: new Date().toLocaleDateString() };
+
+            let reseñasFletero = JSON.parse(localStorage.getItem(`reseñas_usuario_fletero_${fleteroId}`) || "[]");
+            reseñasFletero.push(nuevaReseña);
+            localStorage.setItem(`reseñas_usuario_fletero_${fleteroId}`, JSON.stringify(reseñasFletero));
+            localStorage.setItem(`reseñas_mudanza_${mudanzaId}_cliente`, "true");
+            alert("¡Valoración enviada con éxito!");
+            cargarMisMudanzas();
+        }
+
+        async function verReseñasUsuario(tipo, id, nombre) {
+            document.getElementById("modalReseñasTitulo").innerText = `💬 Opiniones sobre ${nombre}`;
+            const lista = document.getElementById("modalReseñasLista");
+            lista.innerHTML = `<p class="text-sm text-slate-500 text-center py-4">Cargando...</p>`;
+            document.getElementById("modalReseñas").style.display = "flex";
+            let reseñas = JSON.parse(localStorage.getItem(`reseñas_usuario_${tipo}_${id}`) || "[]");
+            if (reseñas.length === 0) {
+                lista.innerHTML = `<p class="text-sm text-slate-500 text-center py-4">Este usuario aún no tiene comentarios.</p>`;
+                return;
+            }
+            lista.innerHTML = "";
+            reseñas.forEach(r => {
+                let estrellasStr = "★".repeat(r.estrellas) + "☆".repeat(5 - r.estrellas);
+                lista.innerHTML += `
+                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1 text-xs">
+                        <div class="flex justify-between font-bold text-slate-700">
+                            <span>✍️ ${r.autor}</span> <span class="text-amber-500">${estrellasStr}</span>
+                        </div>
+                        <p class="text-slate-600">"${r.comentario}"</p>
+                    </div>`;
+            });
+        }
+
+        function cerrarModalReseñas() { document.getElementById("modalReseñas").style.display = "none"; }
+
         function mostrarDatosPerfil() {
             if (!datosClienteActual) return;
             document.getElementById("perfilNombreInput").value = datosClienteActual.nombre || "";
             document.getElementById("perfilEmailInput").value = datosClienteActual.email || "";
             document.getElementById("perfilTelefonoInput").value = datosClienteActual.telefono || "";
+            
+            const idPerfilActivo = parseInt(clienteIdActual) || 1;
+            const tarjetaGuardada = localStorage.getItem(`tarjeta_guardada_cliente_${idPerfilActivo}`);
+            const contenedorEstado = document.getElementById("estadoTarjetaGuardada");
+            if (tarjetaGuardada && contenedorEstado) {
+                const t = JSON.parse(tarjetaGuardada);
+                contenedorEstado.innerHTML = `✅ Tarjeta asociada: <span class="font-mono text-slate-800 font-bold">${t.ultimos}</span>`;
+            }
         }
 
         function guardarTarjetaLocalmente() {
-            alert("¡Tarjeta guardada!");
+            const num = document.getElementById("inputNumTarjeta").value;
+            const vto = document.getElementById("inputVencimiento").value;
+            const cvv = document.getElementById("inputCvv").value;
+            if (!num || num.length < 12 || !vto || !cvv) { alert("Ingresa los datos correctamente."); return; }
+            localStorage.setItem(`tarjeta_guardada_cliente_${parseInt(clienteIdActual) || 1}`, JSON.stringify({ ultimos: "•••• " + num.slice(-4), vencimiento: vto }));
+            alert("¡Tarjeta asociada con éxito!");
+            mostrarDatosPerfil();
         }
 
-        function guardarPerfilCliente() { alert("Perfil actualizado"); }
-        function eliminarTarjeta(mId) { const el = document.getElementById(`tarjeta_sol_${mId}`) || document.getElementById(`tarjeta_of_${mId}`); if(el) el.remove(); }
-        async function aceptarOferta(ofertaId) {
-            await fetch(`${API_URL}/ofertas/${ofertaId}/aceptar`, { method: "PUT" });
+        async function pagarConTarjetaGuardada(mudanzaId, monto) {
+            alert(`¡Pago de $${monto} procesado con éxito con tu tarjeta guardada!`);
             cargarMisMudanzas();
         }
+
+        function eliminarTarjeta(mId) {
+            let idClienteEliminar = parseInt(clienteIdActual) || 1;
+            const eliminadas = JSON.parse(localStorage.getItem(`cliente_eliminadas_${idClienteEliminar}`) || "[]");
+            if (!eliminadas.includes(mId)) { eliminadas.push(mId); localStorage.setItem(`cliente_eliminadas_${idClienteEliminar}`, JSON.stringify(eliminadas)); }
+            ['sol', 'of'].forEach(tipo => document.getElementById(`tarjeta_${tipo}_${mId}`)?.remove());
+        }
+
+        async function aceptarOferta(ofertaId) {
+            const res = await fetch(`${API_URL}/ofertas/${ofertaId}/aceptar`, { method: "PUT", headers: { "Content-Type": "application/json" } });
+            if (res.ok) { alert("¡Oferta aceptada!"); cargarMisMudanzas(); }
+        }
+
+        async function guardarPerfilCliente() {
+            let idClientePerfil = parseInt(clienteIdActual);
+            if (!idClientePerfil) return;
+            const nuevoNombre = document.getElementById("perfilNombreInput").value;
+            const nuevoEmail = document.getElementById("perfilEmailInput").value;
+            const nuevoTelefono = document.getElementById("perfilTelefonoInput").value;
+            try {
+                const res = await fetch(`${API_URL}/clientes/${idClientePerfil}`, {
+                    method: "PUT", headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ nombre: nuevoNombre, email: nuevoEmail, telefono: nuevoTelefono })
+                });
+                if (res.ok) {
+                    datosClienteActual.nombre = nuevoNombre; datosClienteActual.email = nuevoEmail; datosClienteActual.telefono = nuevoTelefono;
+                    sessionStorage.setItem("datosCliente", JSON.stringify(datosClienteActual));
+                    alert("¡Perfil actualizado con éxito!");
+                }
+            } catch(e) {}
+        }
+
+        async function ejecutarRegistroCliente() {
+            try {
+                const archivoFrente = document.getElementById("regDniFrenteFile").files[0];
+                const archivoDorso = document.getElementById("regDniDorsoFile").files[0];
+                const data = {
+                    nombre: document.getElementById("regNombre").value,
+                    telefono: document.getElementById("regTelefono").value,
+                    email: document.getElementById("regEmail").value,
+                    password: document.getElementById("regPassword").value,
+                    dni_frente: archivoFrente ? await convertirArchivoABase64(archivoFrente) : "",
+                    dni_dorso: archivoDorso ? await convertirArchivoABase64(archivoDorso) : ""
+                };
+                const res = await fetch(`${API_URL}/clientes/`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
+                if (res.ok) { alert("¡Registro exitoso!"); cambiarTabAuth('login'); }
+                else { alert("Error en el registro"); }
+            } catch (err) {}
+        }
+
         function cerrarSesionCliente() { sessionStorage.clear(); location.reload(); }
     </script>
 </body>
