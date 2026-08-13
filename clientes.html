@@ -546,7 +546,6 @@
                         textoCargaReal = m.descripcion_carga.replace(matchFecha[0], "").trim();
                     }
 
-                    // CORRECCIÓN: Validar directamente si la oferta ya fue aceptada/aprobada en el servidor (backend)
                     const ofertaAceptadaPorCliente = ofertas ? ofertas.find(o => o.estado === 'aceptada' || o.estado === 'aprobada') : null;
                     const fleteroYaAprobo = (ofertaAceptadaPorCliente) || estaFinalizada;
 
@@ -835,7 +834,7 @@
             const lista = document.getElementById("modalReseñasLista");
             lista.innerHTML = `<p class="text-sm text-slate-500 text-center py-4">Cargando...</p>`;
             document.getElementById("modalReseñas").style.display = "flex";
-            let reseñas = JSON.parse(localStorage.getItem(`reseñas_usuario_${tipo_${id}}`) || "[]");
+            let reseñas = JSON.parse(localStorage.getItem(`reseñas_usuario_${tipo}_${id}`) || "[]");
             if (reseñas.length === 0) {
                 lista.innerHTML = `<p class="text-sm text-slate-500 text-center py-4">Este usuario aún no tiene comentarios.</p>`;
                 return;
