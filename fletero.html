@@ -78,7 +78,7 @@
                     <div id="listaTrasladosAprobados" class="space-y-4"></div>
                 </div>
                 
-                <!-- SECCIÓN CUENTA (FLETERO) - ORDEN ESTRICTO SOLICITADO -->
+                <!-- SECCIÓN CUENTA (FLETERO) -->
                 <div id="seccionCuenta" style="display:none;" class="space-y-6">
                     <div class="flex justify-between items-center border-b pb-2">
                         <h2 class="font-bold text-lg text-slate-900">👤 Mi Cuenta</h2>
@@ -99,7 +99,7 @@
                         <div><label class="text-xs text-slate-500 block">Banco</label><input type="text" id="perfilBancoInput" class="w-full p-2 border rounded bg-white"></div>
                     </div>
 
-                    <!-- 3. Datos personales (Cargados al registrarse) -->
+                    <!-- 3. Datos personales -->
                     <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3 text-sm">
                         <h3 class="font-bold text-slate-800">Datos personales</h3>
                         <div class="text-center bg-white p-3 rounded border shadow-sm">
@@ -113,7 +113,7 @@
                         <div><label class="text-xs text-slate-500 block">Patente</label><input type="text" id="perfilPatenteInput" class="w-full p-2 border rounded bg-white"></div>
                     </div>
 
-                    <!-- 4, 5 y 6. Documentación (Cédula Frente/Dorso, Carnet Frente/Dorso, Seguro) -->
+                    <!-- Documentación -->
                     <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2 text-xs">
                         <h3 class="font-bold text-slate-800 text-sm mb-1">Documentación del Vehículo y Conductor</h3>
                         <div class="bg-white p-2.5 rounded border">📄 <strong>Cédula Verde / Azul (Frente y Dorso):</strong> <span class="text-emerald-600 font-semibold">Cargado</span></div>
@@ -137,7 +137,6 @@
             ? "http://127.0.0.1:8000" 
             : "https://fletes-app.onrender.com";
 
-        // Persistencia fija con localStorage para evitar pérdida de sesión al presionar F5
         let fleteroIdActual = localStorage.getItem("fleteroId");
 
         function cambiarTabAuth(tab) {
@@ -175,7 +174,9 @@
         async function ejecutarRegistroFletero() {
             try {
                 const cedulaFrente = document.getElementById("regCedulaFrente").files[0];
+                const cedulaDorso = document.getElementById("regCedulaDorso").files[0];
                 const carnetFrente = document.getElementById("regCarnetFrente").files[0];
+                const carnetDorso = document.getElementById("regCarnetDorso").files[0];
                 const seguroAuto = document.getElementById("regSeguroAuto").files[0];
 
                 const data = {
@@ -189,7 +190,9 @@
                     alias_bancario: document.getElementById("regAlias").value,
                     nombre_banco: document.getElementById("regBanco").value,
                     cedula_frente: cedulaFrente ? await convertirArchivoABase64(cedulaFrente) : "",
+                    cedula_dorso: cedulaDorso ? await convertirArchivoABase64(cedulaDorso) : "",
                     carnet_frente: carnetFrente ? await convertirArchivoABase64(carnetFrente) : "",
+                    carnet_dorso: carnetDorso ? await convertirArchivoABase64(carnetDorso) : "",
                     seguro_pdf: seguroAuto ? await convertirArchivoABase64(seguroAuto) : ""
                 };
                 const res = await fetch(`${API_URL}/fleteros/`, {
@@ -197,7 +200,10 @@
                     body: JSON.stringify(data)
                 });
                 if (res.ok) { alert("¡Registro exitoso!"); cambiarTabAuth('login'); }
-                else { alert("Error al registrarse"); }
+                else { 
+                    const errDetail = await res.json().catch(() => ({}));
+                    alert("Error al registrarse: " + (errDetail.detail || "Verifica los datos")); 
+                }
             } catch (err) { alert("Error al procesar archivos"); }
         }
 
@@ -220,7 +226,6 @@
             for (const m of mudanzas) {
                 let nombreCliente = `Cliente ID: ${m.cliente_id}`;
                 let telefonoCliente = "No disponible";
-                let calificacionCliente = "⭐⭐⭐⭐⭐ (5.0)";
                 
                 try {
                     let resCliente = await fetch(`${API_URL}/usuarios/${m.cliente_id}`);
@@ -384,7 +389,6 @@
             document.getElementById("pantallaDashboard").style.display="flex"; 
             cargarDatosDashboard(); 
 
-            // 🔄 Sincronización en tiempo real automática cada 4 segundos para el fletero
             setInterval(() => {
                 if (document.getElementById("pantallaDashboard").style.display !== "none") {
                     cargarDatosDashboard();
