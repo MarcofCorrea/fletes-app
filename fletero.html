@@ -195,16 +195,35 @@
                     carnet_dorso: carnetDorso ? await convertirArchivoABase64(carnetDorso) : "",
                     seguro_pdf: seguroAuto ? await convertirArchivoABase64(seguroAuto) : ""
                 };
+                
                 const res = await fetch(`${API_URL}/fleteros/`, {
                     method: "POST", headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(data)
                 });
-                if (res.ok) { alert("¡Registro exitoso!"); cambiarTabAuth('login'); }
-                else { 
+                
+                if (res.ok) { 
+                    alert("¡Registro exitoso!"); 
+                    cambiarTabAuth('login'); 
+                } else { 
                     const errDetail = await res.json().catch(() => ({}));
-                    alert("Error al registrarse: " + (errDetail.detail || "Verifica los datos")); 
+                    console.error("Detalle completo del error del servidor:", errDetail);
+                    
+                    let mensajeError = "Verifica los datos";
+                    if (errDetail.detail) {
+                        if (typeof errDetail.detail === 'string') {
+                            mensajeError = errDetail.detail;
+                        } else if (Array.isArray(errDetail.detail)) {
+                            mensajeError = errDetail.detail.map(e => `${e.loc ? e.loc.join('.') : 'campo'}: ${e.msg}`).join(' | ');
+                        } else {
+                            mensajeError = JSON.stringify(errDetail.detail);
+                        }
+                    }
+                    alert("Error al registrarse: " + mensajeError); 
                 }
-            } catch (err) { alert("Error al procesar archivos"); }
+            } catch (err) { 
+                console.error("Excepción en registro:", err);
+                alert("Error al procesar archivos o conexión"); 
+            }
         }
 
         async function cargarDatosDashboard() {
