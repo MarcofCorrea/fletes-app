@@ -281,6 +281,9 @@
                 let arrayAprobadas = [];
 
                 for (const m of mudanzas) {
+                    // Ignorar de inmediato si la tarjeta fue descartada en cualquier sección
+                    if (eliminadasSol.includes(m.id) || eliminadasTras.includes(m.id)) continue;
+
                     let nombreCliente = `Cliente ID: ${m.cliente_id}`;
                     let telefonoCliente = "No disponible";
                     let calificacionCliente = "⭐⭐⭐⭐⭐ (5.0)";
@@ -320,7 +323,6 @@
                     const clienteAcepto = !!ofertaAceptadaCliente;
 
                     if (aprobadasPorFletero.includes(m.id)) {
-                        if (eliminadasTras.includes(m.id)) continue;
                         const montoAcordado = ofertaAceptadaCliente ? ofertaAceptadaCliente.monto_oferta : '0';
                         const estaPagado = m.estado_pago === "pagado" || m.estado === 'finalizada'; 
                         const estaFinalizadaFletero = finalizadasFleteroLocal.includes(m.id);
@@ -397,8 +399,6 @@
                                 </div>`
                         });
                     } else {
-                        if (eliminadasSol.includes(m.id)) continue;
-
                         let montoMinimoCalculado = Math.max(15000, m.id * 5000);
                         let htmlOfertasCargadas = "";
 
@@ -612,6 +612,12 @@
                 eliminadasSol.push(mId);
                 localStorage.setItem(`fletero_sol_eliminadas_${fleteroIdActual}`, JSON.stringify(eliminadasSol));
             }
+            const eliminadasTras = JSON.parse(localStorage.getItem(`fletero_tras_eliminadas_${fleteroIdActual}`) || "[]");
+            if (!eliminadasTras.includes(mId)) {
+                eliminadasTras.push(mId);
+                localStorage.setItem(`fletero_tras_eliminadas_${fleteroIdActual}`, JSON.stringify(eliminadasTras));
+            }
+
             document.getElementById(`tarjeta_mudanza_${mId}`)?.remove(); 
             try {
                 await fetch(`${API_URL}/mudanzas/${mId}`, {
@@ -626,6 +632,12 @@
             if (!eliminadasTras.includes(mId)) {
                 eliminadasTras.push(mId);
                 localStorage.setItem(`fletero_tras_eliminadas_${fleteroIdActual}`, JSON.stringify(eliminadasTras));
+            }
+
+            const eliminadasSol = JSON.parse(localStorage.getItem(`fletero_sol_eliminadas_${fleteroIdActual}`) || "[]");
+            if (!eliminadasSol.includes(mId)) {
+                eliminadasSol.push(mId);
+                localStorage.setItem(`fletero_sol_eliminadas_${fleteroIdActual}`, JSON.stringify(eliminadasSol));
             }
 
             let aprobadas = JSON.parse(localStorage.getItem(`fletero_aprobadas_manual_${fleteroIdActual}`) || "[]");
