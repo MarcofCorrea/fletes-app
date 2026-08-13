@@ -1,3 +1,4 @@
+import os
 import mercadopago
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
@@ -7,8 +8,8 @@ from models import MudanzaDB
 
 router = APIRouter(tags=["Pagos"])
 
-# Inicializamos el SDK de Mercado Pago con tu Access Token de producción/credenciales
-sdk = mercadopago.SDK("APP_USR-2370906297861152-081112-44bd34ccbf6c5ca4a15f26712bee3918-3609276874")
+# Inicializamos el SDK de Mercado Pago de forma segura usando variables de entorno
+sdk = mercadopago.SDK(os.getenv("MP_ACCESS_TOKEN", ""))
 
 class PeticionPago(BaseModel):
     mudanza_id: int
@@ -16,8 +17,8 @@ class PeticionPago(BaseModel):
     titulo: str
 
 @router.post("/crear-preferencia")
+@router.post("/crear-preferencia-pago")
 def crear_preferencia_pago(pago: PeticionPago, db: Session = Depends(get_db)):
-    # Verificamos que la mudanza exista
     mudanza = db.query(MudanzaDB).filter(MudanzaDB.id == pago.mudanza_id).first()
     if not mudanza:
         raise HTTPException(status_code=404, detail="Mudanza no encontrada")
@@ -31,19 +32,53 @@ def crear_preferencia_pago(pago: PeticionPago, db: Session = Depends(get_db)):
             }
         ],
         "back_urls": {
-            "success": "https://fletes-app.onrender.com/cliente.html?pago=exitoso",
+            "success": "https://fletes-app.onrender.com/cliente.html?pago_exitoso=true&mudanza_id=" + str(pago.mudanza_id),
             "failure": "https://fletes-app.onrender.com/cliente.html?pago=fallido",
             "pending": "https://fletes-app.onrender.com/cliente.html?pago=pendiente"
         },
         "auto_return": "approved",
+        "external_reference": str(pago.mudanza_id)
     }
 
-    result = sdk.preference().create(preference_data)
-    preference = result["response"]
+    try:
+        result = sdk.preference().create(preference_data)
+        preference = result["response"]
+        return {
+            "preference_id": preference.get("id"),
+            "init_point": preference.get("init_point"),
+            "sandbox_init_point": preference.get("sandbox_init_point")
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/procesar-pago")
+@router.post("/procesar-pago/")
+def procesar_pago(payment_data: dict, db: Session = Depends(get_db)):
+    try:
+        result = sdk.payment().create(payment_data)
+        payment = result["response"]
+        
+        if payment.get("status") == "approved":
+            external_ref = payment.get("external_reference")
+            if external_ref:
+                mudanza = db.query(MudanzaDB).filter(MudanzaDB.id == int(external_ref)).first()
+                if mudanza:
+                    mudanza.estado_pago = "pagado"
+                    db.commit()
+                    db.refresh(mudanza)
+                    
+        return payment
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/verificar-pago/{mudanza_id}")
+def verificar_pago(mudanza_id: int, db: Session = Depends(get_db)):
+    mudanza = db.query(MudanzaDB).filter(MudanzaDB.id == mudanza_id).first()
+    if not mudanza:
+        raise HTTPException(status_code=404, detail="Mudanza no encontrada")
     
-    # Devolvemos el link de pago oficial de Mercado Pago
-    return {
-        "preference_id": preference.get("id"),
-        "init_point": preference.get("init_point"),
-        "sandbox_init_point": preference.get("sandbox_init_point")
-    }
+    mudanza.estado_pago = "pagado"
+    db.commit()
+    db.refresh(mudanza)
+    
+    return {"mensaje": "Pago verificado y actualizado con éxito", "estado_pago": mudanza.estado_pago}
