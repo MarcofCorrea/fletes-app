@@ -27,8 +27,6 @@
                         <input type="email" id="loginClienteEmail" placeholder="Correo electrónico" class="w-full p-2 border rounded-lg text-sm">
                         <input type="password" id="loginClientePassword" placeholder="Contraseña" class="w-full p-2 border rounded-lg text-sm">
                         <button type="button" onclick="ejecutarLoginCliente()" class="w-full bg-blue-600 text-white p-2 rounded-lg text-sm font-semibold">Entrar</button>
-                        
-                        <!-- ACCESO RÁPIDO DE PRUEBA -->
                         <button type="button" onclick="accesoRapidoCliente()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white p-2 rounded-lg text-sm font-semibold shadow">🚀 Entrar como Cliente (Prueba)</button>
                     </div>
                 </div>
@@ -53,7 +51,7 @@
             </div>
         </div>
 
-        <!-- DASHBOARD (Oculto hasta hacer login) -->
+        <!-- DASHBOARD -->
         <div id="vistaDashboardCliente" class="flex-1 flex flex-col" style="display: none;">
             <div class="flex border-b bg-blue-900 text-white text-[11px] font-semibold">
                 <button type="button" onclick="cambiarTabDashboard('solicitudes')" id="navSolicitudes" class="flex-1 py-3 text-center border-b-2 border-emerald-400 text-emerald-400">Quiero mudarme</button>
@@ -129,7 +127,7 @@
                         </button>
                     </div>
 
-                    <!-- 3. Datos personales (Cargados al registrarse + edición) -->
+                    <!-- 3. Datos personales -->
                     <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3 text-sm">
                         <h3 class="font-bold text-sm text-slate-700">Datos personales</h3>
                         <div class="text-center bg-white p-3 rounded-lg border border-slate-100 shadow-sm cursor-pointer" onclick="verReseñasUsuario('cliente', clienteIdActual || 1, 'Mi Perfil')">
@@ -150,20 +148,6 @@
                         </div>
                         <button type="button" onclick="guardarPerfilCliente()" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-lg text-sm font-semibold mt-2">Guardar Cambios</button>
                     </div>
-
-                    <!-- Tarjeta de Crédito Adicional -->
-                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3 text-sm">
-                        <h3 class="font-bold text-slate-800 text-sm">💳 Tarjeta de Crédito/Débito</h3>
-                        <p class="text-xs text-slate-500">Asocia tu tarjeta para pagar tus mudanzas al instante con un solo clic.</p>
-                        <div class="space-y-2 pt-1 border-t">
-                            <input type="text" id="inputNumTarjeta" placeholder="Número de tarjeta (Ej: 4509 ...)" class="w-full p-2 border rounded-lg text-xs bg-white font-mono">
-                            <div class="grid grid-cols-2 gap-2">
-                                <input type="text" id="inputVencimiento" placeholder="MM/AA" class="w-full p-2 border rounded-lg text-xs bg-white">
-                                <input type="password" id="inputCvv" placeholder="CVV" maxlength="4" class="w-full p-2 border rounded-lg text-xs bg-white">
-                            </div>
-                            <button type="button" onclick="guardarTarjetaLocalmente()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white p-2 rounded-lg text-xs font-semibold">Guardar Tarjeta de Forma Segura</button>
-                        </div>
-                    </div>
                 </div>
 
                 <div id="seccionSoporte" class="space-y-4" style="display: none;">
@@ -178,7 +162,7 @@
         </div>
     </div>
 
-    <!-- MODAL SELECCIÓN MÉTODO DE PAGO -->
+    <!-- MODAL SELECCIÓN MÉTODO DE PAGO / INCORPORAR TARJETA -->
     <div id="modalAgregarMetodo" class="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" style="display: none;">
         <div class="bg-slate-900 text-white rounded-t-3xl sm:rounded-2xl max-w-md w-full p-6 space-y-6 shadow-2xl">
             <div class="flex justify-between items-center border-b border-slate-800 pb-4">
@@ -186,7 +170,7 @@
                 <button onclick="cerrarModalAgregarMetodo()" class="text-slate-400 hover:text-white font-bold text-xl">✕</button>
             </div>
             <div class="space-y-3">
-                <div onclick="alert('Seleccionado: Tarjeta de crédito o débito')" class="bg-slate-800 hover:bg-slate-700 p-4 rounded-xl flex items-center justify-between cursor-pointer transition-all">
+                <div onclick="abrirFormularioTarjeta()" class="bg-slate-800 hover:bg-slate-700 p-4 rounded-xl flex items-center justify-between cursor-pointer transition-all">
                     <div class="flex items-center gap-3">
                         <span class="text-lg">💳</span>
                         <span class="font-medium text-sm">Tarjeta de crédito o de débito</span>
@@ -200,6 +184,24 @@
                     </div>
                     <span class="text-slate-400">›</span>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL FORMULARIO INCORPORAR TARJETA -->
+    <div id="modalFormTarjeta" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" style="display: none;">
+        <div class="bg-white text-slate-800 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="font-bold text-base">💳 Incorporar Tarjeta de Crédito/Débito</h3>
+                <button onclick="cerrarFormularioTarjeta()" class="text-slate-400 hover:text-red-500 font-bold text-lg">✕</button>
+            </div>
+            <div class="space-y-3 text-sm">
+                <input type="text" id="inputNumTarjeta" placeholder="Número de tarjeta (Ej: 4509 ...)" class="w-full p-2 border rounded-lg text-xs font-mono bg-white">
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="text" id="inputVencimiento" placeholder="MM/AA" class="w-full p-2 border rounded-lg text-xs bg-white">
+                    <input type="password" id="inputCvv" placeholder="CVV" maxlength="4" class="w-full p-2 border rounded-lg text-xs bg-white">
+                </div>
+                <button type="button" onclick="guardarTarjetaLocalmente()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white p-2 rounded-lg text-xs font-semibold">Guardar Tarjeta de Forma Segura</button>
             </div>
         </div>
     </div>
@@ -375,6 +377,15 @@
 
         function abrirModalAgregarMetodo() { document.getElementById("modalAgregarMetodo").style.display = "flex"; }
         function cerrarModalAgregarMetodo() { document.getElementById("modalAgregarMetodo").style.display = "none"; }
+        
+        function abrirFormularioTarjeta() {
+            cerrarModalAgregarMetodo();
+            document.getElementById("modalFormTarjeta").style.display = "flex";
+        }
+        function cerrarFormularioTarjeta() {
+            document.getElementById("modalFormTarjeta").style.display = "none";
+        }
+
         function abrirPantallaMercadoPago() { cerrarModalAgregarMetodo(); document.getElementById("vistaConectarMercadoPago").style.display = "flex"; }
         function cerrarPantallaMercadoPago() { document.getElementById("vistaConectarMercadoPago").style.display = "none"; }
         function vincularCuentaMercadoPagoReal() { alert("¡Cuenta de Mercado Pago conectada con éxito a FletesApp!"); cerrarPantallaMercadoPago(); }
@@ -428,10 +439,11 @@
             };
 
             try {
-                const res = await fetch(`${API_URL}/mudanzas/`, {
+                const res = await fetch(`${API_URL}/mudanzas`, {
                     method: "POST", headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(data)
                 });
+                const result = await res.json();
                 if (res.ok) {
                     alert("¡Mudanza publicada con éxito!");
                     document.getElementById("origenDir").value = "";
@@ -440,7 +452,7 @@
                     document.getElementById("fechaMudanza").value = "";
                     document.getElementById("horaMudanza").value = "";
                     cargarMisMudanzas();
-                } else { alert("Error al publicar mudanza"); }
+                } else { alert("Error al publicar mudanza: " + (result.detail || "Intente nuevamente")); }
             } catch (err) { alert("Error de conexión con el servidor"); }
         }
 
@@ -559,7 +571,7 @@
                                         </div>
                                         <div class="pt-1.5 border-t flex justify-end">
                                             ${esEstaAceptada ? 
-                                                '<span class="bg-amber-100 text-amber-800 px-2.5 py-1 rounded font-bold text-xs">⏳ Pre-aprobada, esperando confirmación del fletero</span>' : 
+                                                '<span class="bg-amber-100 text-amber-800 px-2.5 py-1 rounded font-bold text-xs">⏳ Pre-aprobada</span>' : 
                                                 `<button type="button" onclick="aceptarOferta(${o.id})" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded font-semibold">Aceptar Oferta</button>`
                                             }
                                         </div>
@@ -818,6 +830,7 @@
             if (!num || num.length < 12 || !vto || !cvv) { alert("Ingresa los datos correctamente."); return; }
             localStorage.setItem(`tarjeta_guardada_cliente_${parseInt(clienteIdActual) || 1}`, JSON.stringify({ ultimos: "•••• " + num.slice(-4), vencimiento: vto }));
             alert("¡Tarjeta asociada con éxito!");
+            cerrarFormularioTarjeta();
             mostrarDatosPerfil();
         }
 
