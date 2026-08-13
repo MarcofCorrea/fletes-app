@@ -607,6 +607,11 @@
         function cerrarModalReseñas() { document.getElementById("modalReseñas").style.display = "none"; }
 
         async function eliminarTarjeta(mId) { 
+            const eliminadasSol = JSON.parse(localStorage.getItem(`fletero_sol_eliminadas_${fleteroIdActual}`) || "[]");
+            if (!eliminadasSol.includes(mId)) {
+                eliminadasSol.push(mId);
+                localStorage.setItem(`fletero_sol_eliminadas_${fleteroIdActual}`, JSON.stringify(eliminadasSol));
+            }
             document.getElementById(`tarjeta_mudanza_${mId}`)?.remove(); 
             try {
                 await fetch(`${API_URL}/mudanzas/${mId}`, {
@@ -617,6 +622,16 @@
         }
 
         async function eliminarTarjetaAprobada(mId) { 
+            const eliminadasTras = JSON.parse(localStorage.getItem(`fletero_tras_eliminadas_${fleteroIdActual}`) || "[]");
+            if (!eliminadasTras.includes(mId)) {
+                eliminadasTras.push(mId);
+                localStorage.setItem(`fletero_tras_eliminadas_${fleteroIdActual}`, JSON.stringify(eliminadasTras));
+            }
+
+            let aprobadas = JSON.parse(localStorage.getItem(`fletero_aprobadas_manual_${fleteroIdActual}`) || "[]");
+            aprobadas = aprobadas.filter(id => id !== mId);
+            localStorage.setItem(`fletero_aprobadas_manual_${fleteroIdActual}`, JSON.stringify(aprobadas));
+
             document.getElementById(`tarjeta_traslado_${mId}`)?.remove(); 
             try {
                 await fetch(`${API_URL}/mudanzas/${mId}`, {
