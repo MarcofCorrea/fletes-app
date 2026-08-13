@@ -134,6 +134,19 @@
         </div>
     </div>
 
+    <!-- MODAL RESEÑAS -->
+    <div id="modalReseñas" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" style="display: none;">
+        <div class="bg-white rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl max-h-[80vh] flex flex-col">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 id="modalReseñasTitulo" class="font-bold text-base text-slate-800">💬 Comentarios y Valoraciones</h3>
+                <button onclick="cerrarModalReseñas()" class="text-slate-400 hover:text-red-500 font-bold text-lg">✕</button>
+            </div>
+            <div id="modalReseñasLista" class="overflow-y-auto space-y-3 flex-1 pr-1">
+                <p class="text-sm text-slate-500 text-center py-4">Cargando opiniones...</p>
+            </div>
+        </div>
+    </div>
+
     <script>
         const API_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" 
             ? "http://127.0.0.1:8000" 
@@ -212,8 +225,6 @@
                     cambiarTabAuth('login'); 
                 } else { 
                     const errDetail = await res.json().catch(() => ({}));
-                    console.error("Detalle completo del error del servidor:", errDetail);
-                    
                     let mensajeError = "Verifica los datos";
                     if (errDetail.detail) {
                         if (typeof errDetail.detail === 'string') {
@@ -227,110 +238,188 @@
                     alert("Error al registrarse: " + mensajeError); 
                 }
             } catch (err) { 
-                console.error("Excepción en registro:", err);
                 alert("Error al procesar archivos o conexión"); 
             }
         }
 
         async function cargarDatosDashboard() {
-            const [resM, resO] = await Promise.all([fetch(`${API_URL}/mudanzas/`), fetch(`${API_URL}/ofertas/`)]);
-            const mudanzas = await resM.json();
-            const ofertas = await resO.json();
-            
-            const cont = document.getElementById("listaMudanzas");
-            const contTraslados = document.getElementById("listaTrasladosAprobados");
-            if (cont) cont.innerHTML = "";
-            if (contTraslados) contTraslados.innerHTML = "";
-
-            const eliminadasSol = JSON.parse(localStorage.getItem(`fletero_sol_eliminadas_${fleteroIdActual}`) || "[]");
-            const eliminadasTras = JSON.parse(localStorage.getItem(`fletero_tras_eliminadas_${fleteroIdActual}`) || "[]");
-            const aprobadasPorFletero = JSON.parse(localStorage.getItem(`fletero_aprobadas_manual_${fleteroIdActual}`) || "[]");
-
-            let arrayAprobadas = [];
-
-            for (const m of mudanzas) {
-                let nombreCliente = `Cliente ID: ${m.cliente_id}`;
-                let telefonoCliente = "No disponible";
+            try {
+                const [resM, resO, resCli] = await Promise.all([
+                    fetch(`${API_URL}/mudanzas/`), 
+                    fetch(`${API_URL}/ofertas/`),
+                    fetch(`${API_URL}/clientes/`).catch(() => null)
+                ]);
+                const mudanzas = await resM.json();
+                const ofertas = await resO.json();
+                const listaClientes = resCli && resCli.ok ? await resCli.json() : [];
                 
-                try {
-                    let resCliente = await fetch(`${API_URL}/usuarios/${m.cliente_id}`);
-                    if (!resCliente.ok) resCliente = await fetch(`${API_URL}/clientes/${m.cliente_id}`);
-                    if (resCliente.ok) {
-                        const cliData = await resCliente.json();
-                        const clienteObj = cliData.cliente || cliData;
-                        nombreCliente = clienteObj.nombre || nombreCliente;
-                        telefonoCliente = clienteObj.telefono || telefonoCliente;
-                    }
-                } catch(e) {}
+                const cont = document.getElementById("listaMudanzas");
+                const contTraslados = document.getElementById("listaTrasladosAprobados");
+                if (!cont || !contTraslados) return;
 
-                let fechaOriginal = "", horaOriginal = "";
-                let textoCargaReal = m.descripcion_carga;
-                let fechaOrdenKey = "9999-12-31", horaOrdenKey = "23:59";
+                // Mantener estado si el usuario está tipeando un monto o hora
+                const inputsActivos = {};
+                document.querySelectorAll("#listaMudanzas input").forEach(input => {
+                    inputsActivos[input.id] = input.value;
+                });
 
-                const matchFecha = m.descripcion_carga.match(/\[Fecha: (.*?) - (.*?)\]/);
-                if (matchFecha) {
-                    fechaOriginal = matchFecha[1]; horaOriginal = matchFecha[2];
-                    fechaOrdenKey = matchFecha[1]; horaOrdenKey = matchFecha[2];
-                    textoCargaReal = m.descripcion_carga.replace(matchFecha[0], "").trim();
-                }
+                cont.innerHTML = "";
+                contTraslados.innerHTML = "";
 
-                const ofertaAceptadaCliente = ofertas.find(o => o.mudanza_id == m.id && o.fletero_id == fleteroIdActual && (o.estado === 'aceptada' || o.estado === 'aprobada'));
+                const eliminadasSol = JSON.parse(localStorage.getItem(`fletero_sol_eliminadas_${fleteroIdActual}`) || "[]");
+                const eliminadasTras = JSON.parse(localStorage.getItem(`fletero_tras_eliminadas_${fleteroIdActual}`) || "[]");
+                const aprobadasPorFletero = JSON.parse(localStorage.getItem(`fletero_aprobadas_manual_${fleteroIdActual}`) || "[]");
 
-                if (aprobadasPorFletero.includes(m.id)) {
-                    if (eliminadasTras.includes(m.id)) continue;
-                    const montoAcordado = ofertaAceptadaCliente ? ofertaAceptadaCliente.monto_oferta : '0';
-                    const estaPagado = m.estado_pago === "pagado"; 
+                let arrayAprobadas = [];
+
+                for (const m of mudanzas) {
+                    let nombreCliente = `Cliente ID: ${m.cliente_id}`;
+                    let telefonoCliente = "No disponible";
+                    let calificacionCliente = "⭐⭐⭐⭐⭐ (5.0)";
                     
-                    let contactoClienteHtml = estaPagado ? `<a href="https://wa.me/${telefonoCliente.replace(/\D/g, '')}" target="_blank" class="text-emerald-700 font-bold underline">💬 WhatsApp (${telefonoCliente})</a>` : `<span class="text-amber-700 italic">🔒 Oculto hasta que el cliente abone</span>`;
-                    const estadoPagoHtml = estaPagado ? '<span class="bg-emerald-200 text-emerald-900 px-2 py-1 rounded text-xs font-bold">🔒 Pago Retenido</span>' : '<span class="bg-amber-100 text-amber-800 px-2 py-1 rounded text-xs">⏳ Pendiente</span>';
+                    try {
+                        let resCliente = await fetch(`${API_URL}/usuarios/${m.cliente_id}`);
+                        if (!resCliente.ok) resCliente = await fetch(`${API_URL}/clientes/${m.cliente_id}`);
+                        if (resCliente.ok) {
+                            const cliData = await resCliente.json();
+                            const clienteObj = cliData.cliente || cliData;
+                            nombreCliente = clienteObj.nombre || nombreCliente;
+                            telefonoCliente = clienteObj.telefono || telefonoCliente;
+                        } else {
+                            const matchCli = listaClientes.find(c => c.id === m.cliente_id);
+                            if (matchCli) {
+                                nombreCliente = matchCli.nombre || nombreCliente;
+                                telefonoCliente = matchCli.telefono || telefonoCliente;
+                            }
+                        }
+                    } catch(e) {}
 
-                    const origenMap = encodeURIComponent(m.origen_direccion || '');
-                    const destinoMap = encodeURIComponent(m.destino_direccion || '');
-                    const mapEmbedUrl = `https://maps.google.com/maps?q=${origenMap}+to+${destinoMap}&output=embed`;
+                    let fechaOriginal = "", horaOriginal = "";
+                    let textoCargaReal = m.descripcion_carga;
+                    let fechaOrdenKey = "9999-12-31", horaOrdenKey = "23:59";
 
-                    arrayAprobadas.push({
-                        timestamp: new Date(`${fechaOrdenKey}T${horaOrdenKey}`).getTime(),
-                        html: `
-                            <div id="tarjeta_traslado_${m.id}" class="bg-emerald-50 p-4 rounded-xl border border-emerald-200 space-y-3 text-sm relative">
-                                <button onclick="eliminarTarjetaAprobada(${m.id})" class="absolute top-3 right-3 text-slate-400 hover:text-red-500 text-xs font-bold bg-white px-1">✕</button>
-                                <div class="font-bold text-emerald-900">🚀 Mudanza #${m.id}</div>
-                                <div class="bg-white p-2 rounded border text-xs">👤 <strong>Cliente:</strong> ${nombreCliente} | 📞 ${contactoClienteHtml}</div>
-                                <div class="text-xs">📍 Origen: ${m.origen_direccion} ➔ Destino: ${m.destino_direccion}</div>
-                                <div class="flex justify-between text-xs pt-1"><span>💰 $${montoAcordado}</span> ${estadoPagoHtml}</div>
-                                <div class="mt-2 rounded-lg overflow-hidden border border-emerald-300">
-                                    <iframe width="100%" height="150" style="border:0;" loading="lazy" src="${mapEmbedUrl}"></iframe>
-                                </div>
-                            </div>`
-                    });
-                } else {
-                    if (eliminadasSol.includes(m.id)) continue;
-                    const ofertasDeEstaMudanza = ofertas.filter(o => o.mudanza_id == m.id && o.fletero_id == fleteroIdActual);
-                    let htmlOfertasCargadas = "";
-                    if (ofertasDeEstaMudanza.length > 0) {
-                        const ultimaOferta = ofertasDeEstaMudanza[ofertasDeEstaMudanza.length - 1];
-                        let estadoUltima = (ultimaOferta.estado === 'aceptada' || ultimaOferta.estado === 'aprobada') ?
-                            `<button onclick="aprobarTrasladoFletero(${m.id}, ${ultimaOferta.id})" class="bg-emerald-600 text-white px-2 py-1 rounded text-xs font-bold">Aprobar</button>` :
-                            `<button onclick="cambiarEstado(${ultimaOferta.id}, 'cancelada')" class="bg-red-500 text-white px-2 py-0.5 rounded text-[10px]">Cancelar</button>`;
-                        htmlOfertasCargadas = `<div class="mt-2 border-t pt-1 text-xs">Oferta: $${ultimaOferta.monto_oferta} ${estadoUltima}</div>`;
+                    const matchFecha = m.descripcion_carga.match(/\[Fecha: (.*?) - (.*?)\]/);
+                    if (matchFecha) {
+                        fechaOriginal = matchFecha[1]; horaOriginal = matchFecha[2];
+                        fechaOrdenKey = matchFecha[1]; horaOrdenKey = matchFecha[2];
+                        textoCargaReal = m.descripcion_carga.replace(matchFecha[0], "").trim();
                     }
 
-                    cont.innerHTML += `
-                        <div id="tarjeta_mudanza_${m.id}" class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3 text-sm relative">
-                            <button onclick="eliminarTarjeta(${m.id})" class="absolute top-3 right-3 text-slate-400 hover:text-red-500 text-xs font-bold bg-white px-1">✕</button>
-                            <div class="font-bold text-slate-900">📦 Solicitud #${m.id}</div>
-                            <div class="text-xs space-y-1"><div>📍 De: ${m.origen_direccion}</div><div>🏁 A: ${m.destino_direccion}</div><div>📋 ${textoCargaReal}</div></div>
-                            <div class="grid grid-cols-3 gap-2 pt-2 border-t">
-                                <input type="number" id="monto_${m.id}" class="p-1 border rounded text-xs bg-white" placeholder="Monto ($)">
-                                <input type="time" id="hora_${m.id}" class="p-1 border rounded text-xs bg-white" value="${horaOriginal}">
-                                <button onclick="enviarOferta(${m.id})" class="bg-slate-900 text-white p-1 rounded text-xs font-semibold">Ofertar</button>
-                            </div>
-                            ${htmlOfertasCargadas}
-                        </div>`;
-                }
-            }
+                    const ofertasDeEstaMudanza = ofertas.filter(o => o.mudanza_id == m.id && o.fletero_id == fleteroIdActual);
+                    ofertasDeEstaMudanza.sort((a, b) => b.id - a.id); // Más reciente primero
 
-            arrayAprobadas.sort((a, b) => a.timestamp - b.timestamp);
-            arrayAprobadas.forEach(item => { if(contTraslados) contTraslados.innerHTML += item.html; });
+                    const ofertaAceptadaCliente = ofertasDeEstaMudanza.find(o => o.estado === 'aceptada' || o.estado === 'aprobada');
+                    const clienteAcepto = !!ofertaAceptadaCliente;
+
+                    if (aprobadasPorFletero.includes(m.id)) {
+                        if (eliminadasTras.includes(m.id)) continue;
+                        const montoAcordado = ofertaAceptadaCliente ? ofertaAceptadaCliente.monto_oferta : '0';
+                        const estaPagado = m.estado_pago === "pagado"; 
+                        
+                        let contactoClienteHtml = estaPagado ? `<a href="https://wa.me/${telefonoCliente.replace(/\D/g, '')}" target="_blank" class="text-emerald-700 font-bold underline">💬 WhatsApp (${telefonoCliente})</a>` : `<span class="text-amber-700 italic">🔒 Oculto hasta que el cliente abone</span>`;
+                        const estadoPagoHtml = estaPagado ? '<span class="bg-emerald-200 text-emerald-900 px-2 py-1 rounded text-xs font-bold">🔒 Pago Retenido</span>' : '<span class="bg-amber-100 text-amber-800 px-2 py-1 rounded text-xs">⏳ Pendiente</span>';
+
+                        const origenMap = encodeURIComponent(m.origen_direccion || '');
+                        const destinoMap = encodeURIComponent(m.destino_direccion || '');
+                        const mapEmbedUrl = `https://maps.google.com/maps?q=${origenMap}+to+${destinoMap}&output=embed`;
+
+                        arrayAprobadas.push({
+                            timestamp: new Date(`${fechaOrdenKey}T${horaOrdenKey}`).getTime(),
+                            html: `
+                                <div id="tarjeta_traslado_${m.id}" class="bg-emerald-50 p-4 rounded-xl border border-emerald-200 space-y-3 text-sm relative">
+                                    <button onclick="eliminarTarjetaAprobada(${m.id})" class="absolute top-3 right-3 text-slate-400 hover:text-red-500 text-xs font-bold bg-white px-1">✕</button>
+                                    <div class="font-bold text-emerald-900">🚀 Mudanza #${m.id}</div>
+                                    <div class="bg-white p-2.5 rounded border text-xs space-y-1">
+                                        <div>👤 <strong>Cliente:</strong> <span onclick="verReseñasUsuario('cliente', ${m.cliente_id}, '${nombreCliente}')" class="text-blue-600 underline cursor-pointer font-bold">${nombreCliente}</span></div>
+                                        <div>⭐ <strong>Calificación:</strong> <span onclick="verReseñasUsuario('cliente', ${m.cliente_id}, '${nombreCliente}')" class="text-amber-500 font-semibold cursor-pointer">${calificacionCliente}</span></div>
+                                        <div>📞 <strong>Teléfono:</strong> ${contactoClienteHtml}</div>
+                                    </div>
+                                    <div class="text-xs">📍 Origen: ${m.origen_direccion} ➔ Destino: ${m.destino_direccion}</div>
+                                    <div class="flex justify-between text-xs pt-1"><span>💰 $${montoAcordado}</span> ${estadoPagoHtml}</div>
+                                    <div class="mt-2 rounded-lg overflow-hidden border border-emerald-300">
+                                        <iframe width="100%" height="150" style="border:0;" loading="lazy" src="${mapEmbedUrl}"></iframe>
+                                    </div>
+                                </div>`
+                        });
+                    } else {
+                        if (eliminadasSol.includes(m.id)) continue;
+
+                        let montoMinimoCalculado = Math.max(15000, m.id * 5000);
+                        let htmlOfertasCargadas = "";
+
+                        if (ofertasDeEstaMudanza.length > 0) {
+                            htmlOfertasCargadas += `<div class="mt-2 border-t pt-2 space-y-2"><div class="text-xs font-bold text-slate-700">Historial de tus ofertas:</div>`;
+                            
+                            ofertasDeEstaMudanza.forEach((oferta, index) => {
+                                let esLaUltima = (index === 0);
+                                let estiloTachado = !esLaUltima ? "line-through opacity-60 text-slate-400" : "";
+                                let estadoBadge = "";
+
+                                if (oferta.estado === 'aceptada' || oferta.estado === 'aprobada') {
+                                    estadoBadge = `<span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded text-[10px] font-bold">¡Cliente aceptó esta oferta!</span>`;
+                                } else if (oferta.estado === 'cancelada') {
+                                    estadoBadge = `<span class="bg-red-100 text-red-700 px-2 py-0.5 rounded text-[10px]">Cancelada</span>`;
+                                } else {
+                                    estadoBadge = `<span class="bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-[10px]">Pendiente</span>`;
+                                }
+
+                                let botonAprobarCliente = "";
+                                if (oferta.estado === 'aceptada' || oferta.estado === 'aprobada') {
+                                    botonAprobarCliente = `<button onclick="aprobarTrasladoFletero(${m.id}, ${oferta.id})" class="w-full mt-2 bg-emerald-600 hover:bg-emerald-700 text-white p-2 rounded text-xs font-bold animate-pulse">Aprobar traslado (Cliente aceptó)</button>`;
+                                }
+
+                                htmlOfertasCargadas += `
+                                    <div class="bg-white p-2 rounded-lg border shadow-sm space-y-1 ${estiloTachado}">
+                                        <div class="flex justify-between items-center text-xs">
+                                            <span class="font-bold">Oferta: $${oferta.monto_oferta}</span>
+                                            ${estadoBadge}
+                                        </div>
+                                        <div class="text-[11px] text-slate-500">Estimado: ${oferta.tiempo_estimado}</div>
+                                        ${esLaUltima && (oferta.estado === 'aceptada' || oferta.estado === 'aprobada') ? `<div class="bg-amber-50 border border-amber-200 text-amber-900 p-1.5 rounded text-[11px] font-semibold mt-1">⚠️ Cliente aceptó esta oferta queda que vos la apruebes</div>` : ""}
+                                        ${esLaUltima ? botonAprobarCliente : ""}
+                                    </div>
+                                `;
+                            });
+                            htmlOfertasCargadas += `</div>`;
+                        }
+
+                        const origenMap = encodeURIComponent(m.origen_direccion || '');
+                        const destinoMap = encodeURIComponent(m.destino_direccion || '');
+                        const mapEmbedUrl = `https://maps.google.com/maps?q=${origenMap}+to+${destinoMap}&output=embed`;
+
+                        const valMonto = inputsActivos[`monto_${m.id}`] !== undefined ? inputsActivos[`monto_${m.id}`] : "";
+                        const valHora = inputsActivos[`hora_${m.id}`] !== undefined ? inputsActivos[`hora_${m.id}`] : horaOriginal;
+
+                        cont.innerHTML += `
+                            <div id="tarjeta_mudanza_${m.id}" class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3 text-sm relative">
+                                <button onclick="eliminarTarjeta(${m.id})" class="absolute top-3 right-3 text-slate-400 hover:text-red-500 text-xs font-bold bg-white px-1">✕</button>
+                                <div class="font-bold text-slate-900">📦 Solicitud #${m.id}</div>
+                                <div class="bg-white p-2.5 rounded border text-xs space-y-1">
+                                    <div>👤 <strong>Cliente:</strong> <span onclick="verReseñasUsuario('cliente', ${m.cliente_id}, '${nombreCliente}')" class="text-blue-600 underline cursor-pointer font-bold">${nombreCliente}</span></div>
+                                    <div>⭐ <strong>Calificación:</strong> <span onclick="verReseñasUsuario('cliente', ${m.cliente_id}, '${nombreCliente}')" class="text-amber-500 font-semibold cursor-pointer">${calificacionCliente}</span></div>
+                                </div>
+                                <div class="text-xs space-y-1">
+                                    <div>📍 De: ${m.origen_direccion}</div>
+                                    <div>🏁 A: ${m.destino_direccion}</div>
+                                    <div>📋 ${textoCargaReal}</div>
+                                    <div class="text-emerald-700 font-semibold pt-1">💡 Monto mínimo orientativo sugerido: $${montoMinimoCalculado}</div>
+                                </div>
+                                <div class="grid grid-cols-3 gap-2 pt-2 border-t">
+                                    <input type="number" id="monto_${m.id}" class="p-1 border rounded text-xs bg-white" placeholder="Monto ($)" value="${valMonto}">
+                                    <input type="time" id="hora_${m.id}" class="p-1 border rounded text-xs bg-white" value="${valHora}">
+                                    <button onclick="enviarOferta(${m.id})" class="bg-slate-900 text-white p-1 rounded text-xs font-semibold">Ofertar</button>
+                                </div>
+                                <div class="mt-2 rounded-lg overflow-hidden border border-slate-300">
+                                    <iframe width="100%" height="120" style="border:0;" loading="lazy" src="${mapEmbedUrl}"></iframe>
+                                </div>
+                                ${htmlOfertasCargadas}
+                            </div>`;
+                    }
+                }
+
+                arrayAprobadas.sort((a, b) => a.timestamp - b.timestamp);
+                arrayAprobadas.forEach(item => { contTraslados.innerHTML += item.html; });
+            } catch (e) {}
         }
 
         async function aprobarTrasladoFletero(mudanzaId, ofertaId) {
@@ -405,6 +494,31 @@
             cargarDatosDashboard();
         }
 
+        async function verReseñasUsuario(tipo, id, nombre) {
+            document.getElementById("modalReseñasTitulo").innerText = `💬 Opiniones sobre ${nombre}`;
+            const lista = document.getElementById("modalReseñasLista");
+            lista.innerHTML = `<p class="text-sm text-slate-500 text-center py-4">Cargando...</p>`;
+            document.getElementById("modalReseñas").style.display = "flex";
+            let reseñas = JSON.parse(localStorage.getItem(`reseñas_usuario_${tipo}_${id}`) || "[]");
+            if (reseñas.length === 0) {
+                lista.innerHTML = `<p class="text-sm text-slate-500 text-center py-4">Este usuario aún no tiene comentarios.</p>`;
+                return;
+            }
+            lista.innerHTML = "";
+            reseñas.forEach(r => {
+                let estrellasStr = "★".repeat(r.estrellas) + "☆".repeat(5 - r.estrellas);
+                lista.innerHTML += `
+                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1 text-xs">
+                        <div class="flex justify-between font-bold text-slate-700">
+                            <span>✍️ ${r.autor}</span> <span class="text-amber-500">${estrellasStr}</span>
+                        </div>
+                        <p class="text-slate-600">"${r.comentario}"</p>
+                    </div>`;
+            });
+        }
+
+        function cerrarModalReseñas() { document.getElementById("modalReseñas").style.display = "none"; }
+
         function eliminarTarjeta(mId) { document.getElementById(`tarjeta_mudanza_${mId}`)?.remove(); }
         function eliminarTarjetaAprobada(mId) { document.getElementById(`tarjeta_traslado_${mId}`)?.remove(); }
         function cerrarSesion() { localStorage.clear(); location.reload(); }
@@ -418,7 +532,7 @@
                 if (document.getElementById("pantallaDashboard").style.display !== "none") {
                     cargarDatosDashboard();
                 }
-            }, 4000);
+            }, 6000);
         }
     </script>
 </body>

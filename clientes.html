@@ -260,7 +260,6 @@
         const mp = new MercadoPago("APP_USR-60bf29e6-7166-4f3a-b230-0aad7d628d81", { locale: "es-AR" });
         let paymentBrickController = null;
 
-        // Persistencia fija con localStorage para evitar pérdida de sesión al presionar F5
         let clienteIdActual = localStorage.getItem("clienteId") ? parseInt(localStorage.getItem("clienteId")) : null;
         let datosClienteActual = localStorage.getItem("datosCliente") ? JSON.parse(localStorage.getItem("datosCliente")) : null;
 
@@ -294,12 +293,12 @@
                     cargarMisMudanzas();
                 }
 
-                // 🔄 Sincronización en tiempo real automática cada 4 segundos
+                // Sincronización automática optimizada a 6 segundos para evitar parpadeos
                 setInterval(() => {
                     if (document.getElementById("vistaDashboardCliente").style.display !== "none") {
                         cargarMisMudanzas();
                     }
-                }, 4000);
+                }, 6000);
             } else {
                 document.getElementById("contenedorAuth").style.display = "flex";
                 document.getElementById("vistaDashboardCliente").style.display = "none";
@@ -326,7 +325,7 @@
                     if (document.getElementById("vistaDashboardCliente").style.display !== "none") {
                         cargarMisMudanzas();
                     }
-                }, 4000);
+                }, 6000);
             } catch (e) {
                 clienteIdActual = 1;
                 datosClienteActual = { id: 1, nombre: "Cliente Demo", email: "cliente@demo.com", telefono: "3511234567" };
@@ -432,7 +431,7 @@
                         if (document.getElementById("vistaDashboardCliente").style.display !== "none") {
                             cargarMisMudanzas();
                         }
-                    }, 4000);
+                    }, 6000);
                 } else { alert("Error: " + (result.detail || "Datos incorrectos")); }
             } catch (err) { alert("Error de conexión con el servidor"); }
         }
@@ -495,8 +494,10 @@
                 
                 const contenedorSolicitudes = document.getElementById("listaMisMudanzas");
                 const contenedorOfertas = document.getElementById("listaOfertasCliente");
-                if (contenedorSolicitudes) contenedorSolicitudes.innerHTML = "";
-                if (contenedorOfertas) contenedorOfertas.innerHTML = "";
+                if (!contenedorSolicitudes || !contenedorOfertas) return;
+
+                contenedorSolicitudes.innerHTML = "";
+                contenedorOfertas.innerHTML = "";
 
                 const eliminadas = JSON.parse(localStorage.getItem(`cliente_eliminadas_${idClienteConsulta}`) || "[]");
                 const finalizadasLocal = JSON.parse(localStorage.getItem(`mudanzas_finalizadas`) || "[]");
@@ -507,8 +508,8 @@
                 });
 
                 if (mudanzasValidas.length === 0) {
-                    if (contenedorSolicitudes) contenedorSolicitudes.innerHTML = `<p class="text-sm text-slate-500 text-center py-4">Aún no has publicado ninguna mudanza.</p>`;
-                    if (contenedorOfertas) contenedorOfertas.innerHTML = `<p class="text-sm text-slate-500 text-center py-4">No hay ofertas recibidas aún.</p>`;
+                    contenedorSolicitudes.innerHTML = `<p class="text-sm text-slate-500 text-center py-4">Aún no has publicado ninguna mudanza.</p>`;
+                    contenedorOfertas.innerHTML = `<p class="text-sm text-slate-500 text-center py-4">No hay ofertas recibidas aún.</p>`;
                     return;
                 }
 
@@ -896,7 +897,7 @@
                 const archivoDorso = document.getElementById("regDniDorsoFile").files[0];
                 const data = {
                     nombre: document.getElementById("regNombre").value,
-                    telefono: document.getElementById("regTelefono").value,
+                    telefono: document.getElementById("regTelefono".value),
                     email: document.getElementById("regEmail").value,
                     password: document.getElementById("regPassword").value,
                     dni_frente: archivoFrente ? await convertirArchivoABase64(archivoFrente) : "",
