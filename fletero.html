@@ -445,6 +445,22 @@
                         const valMonto = inputsActivos[`monto_${m.id}`] !== undefined ? inputsActivos[`monto_${m.id}`] : "";
                         const valHora = inputsActivos[`hora_${m.id}`] !== undefined ? inputsActivos[`hora_${m.id}`] : horaOriginal;
 
+                        let seccionOfertarHtml = `
+                            <div class="grid grid-cols-3 gap-2 pt-2 border-t">
+                                <input type="number" id="monto_${m.id}" class="p-1 border rounded text-xs bg-white" placeholder="Monto ($)" value="${valMonto}">
+                                <input type="time" id="hora_${m.id}" class="p-1 border rounded text-xs bg-white" value="${valHora}">
+                                <button onclick="enviarOferta(${m.id})" class="bg-slate-900 text-white p-1 rounded text-xs font-semibold">Ofertar</button>
+                            </div>
+                        `;
+
+                        if (clienteAcepto) {
+                            seccionOfertarHtml = `
+                                <div class="pt-2 border-t text-center">
+                                    <span class="bg-amber-100 text-amber-800 px-3 py-1.5 rounded-lg text-xs font-bold block">🔒 Oferta aceptada por el cliente. Ya no se pueden enviar más propuestas.</span>
+                                </div>
+                            `;
+                        }
+
                         cont.innerHTML += `
                             <div id="tarjeta_mudanza_${m.id}" class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3 text-sm relative">
                                 <button onclick="eliminarTarjeta(${m.id})" class="absolute top-3 right-3 text-slate-400 hover:text-red-500 text-xs font-bold bg-white px-1">✕</button>
@@ -459,11 +475,7 @@
                                     <div>📋 ${textoCargaReal}</div>
                                     <div class="text-emerald-700 font-semibold pt-1">💡 Monto mínimo orientativo sugerido: $${montoMinimoCalculado}</div>
                                 </div>
-                                <div class="grid grid-cols-3 gap-2 pt-2 border-t">
-                                    <input type="number" id="monto_${m.id}" class="p-1 border rounded text-xs bg-white" placeholder="Monto ($)" value="${valMonto}">
-                                    <input type="time" id="hora_${m.id}" class="p-1 border rounded text-xs bg-white" value="${valHora}">
-                                    <button onclick="enviarOferta(${m.id})" class="bg-slate-900 text-white p-1 rounded text-xs font-semibold">Ofertar</button>
-                                </div>
+                                ${seccionOfertarHtml}
                                 <div class="mt-2 rounded-lg overflow-hidden border border-slate-300">
                                     <iframe width="100%" height="120" style="border:0;" loading="lazy" src="${mapEmbedUrl}"></iframe>
                                 </div>
