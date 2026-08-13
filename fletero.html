@@ -396,7 +396,7 @@
 
         async function enviarOferta(mId) {
             const monto = document.getElementById(`monto_${mId}`).value;
-            const hora = document.getElementById(`hora_${mId}$).value;
+            const hora = document.getElementById(`hora_${mId}`).value;
             if(!monto) return alert("Ingresa un monto");
             await fetch(`${API_URL}/ofertas/`, { 
                 method: "POST", headers: {"Content-Type":"application/json"}, 
