@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime
+from sqlalchemy import Column, Integer, String, Float, DateTime, Boolean
 from datetime import datetime
 from database import Base
 
@@ -37,6 +37,7 @@ class MudanzaDB(Base):
     fletero_ganador_id = Column(Integer, nullable=True)
     precio_final = Column(Float, nullable=True)
     estado_pago = Column(String, default="pendiente") # "pendiente", "retenido_en_garantia", "pagado"
+    fletero_aprobo = Column(Boolean, default=False) # NUEVO: Control oficial en base de datos para la comunicación entre partes
     creado_at = Column(DateTime, default=datetime.now)
 
 class OfertaDB(Base):

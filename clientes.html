@@ -547,8 +547,8 @@
 
                     const ofertaAceptadaPorCliente = ofertas ? ofertas.find(o => o.estado === 'aceptada' || o.estado === 'aprobada') : null;
                     
-                    // CORRECCIÓN: Estrictamente requiere que el fletero haya aprobado de forma manual mediante su botón
-                    const fleteroYaAprobo = (ofertaAceptadaPorCliente && localStorage.getItem(`fletero_aprobo_mudanza_${m.id}`) === "true") || estaFinalizada;
+                    // VALIDACIÓN DIRECTA DESDE LA BASE DE DATOS (m.fletero_aprobo)
+                    const fleteroYaAprobo = (ofertaAceptadaPorCliente && m.fletero_aprobo === true) || estaFinalizada;
 
                     if (!fleteroYaAprobo) {
                         tieneSolicitudesActivas = true;

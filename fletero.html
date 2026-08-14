@@ -255,7 +255,7 @@
                 const ofertas = await resO.json();
                 const listaClientes = resCli && resCli.ok ? await resCli.json() : [];
 
-                const footprintActual = JSON.stringify({ mudanzas, ofertas, aprobadas: localStorage.getItem(`fletero_aprobadas_manual_${fleteroIdActual}`), finalizadas: localStorage.getItem(`fletero_finalizadas_${fleteroIdActual}`) });
+                const footprintActual = JSON.stringify({ mudanzas, ofertas, finalizadas: localStorage.getItem(`fletero_finalizadas_${fleteroIdActual}`) });
                 if (footprintActual === ultimoEstadoFleteroJson) {
                     return; 
                 }
@@ -275,7 +275,6 @@
 
                 const eliminadasSol = JSON.parse(localStorage.getItem(`fletero_sol_eliminadas_${fleteroIdActual}`) || "[]");
                 const eliminadasTras = JSON.parse(localStorage.getItem(`fletero_tras_eliminadas_${fleteroIdActual}`) || "[]");
-                const aprobadasPorFletero = JSON.parse(localStorage.getItem(`fletero_aprobadas_manual_${fleteroIdActual}`) || "[]");
                 const finalizadasFleteroLocal = JSON.parse(localStorage.getItem(`fletero_finalizadas_${fleteroIdActual}`) || "[]");
 
                 let arrayAprobadas = [];
@@ -321,8 +320,10 @@
                     const ofertaAceptadaCliente = ofertasDeEstaMudanza.find(o => o.estado === 'aceptada' || o.estado === 'aprobada');
                     const clienteAcepto = !!ofertaAceptadaCliente;
 
-                    // Requerimos tanto el OK del fletero como la aceptación del cliente para pasar a aprobadas
-                    if (aprobadasPorFletero.includes(m.id) && clienteAcepto) {
+                    // VALIDACIÓN DIRECTA DESDE LA BASE DE DATOS (m.fletero_aprobo)
+                    const fleteroYaAproboBD = m.fletero_aprobo === true;
+
+                    if (fleteroYaAproboBD && clienteAcepto) {
                         const montoAcordado = ofertaAceptadaCliente ? ofertaAceptadaCliente.monto_oferta : '0';
                         const estaPagado = m.estado_pago === "pagado" || m.estado === 'finalizada'; 
                         const estaFinalizadaFletero = finalizadasFleteroLocal.includes(m.id);
@@ -496,10 +497,22 @@
         }
 
         async function aprobarTrasladoFletero(mudanzaId, ofertaId) {
-            const aprobadas = JSON.parse(localStorage.getItem(`fletero_aprobadas_manual_${fleteroIdActual}`) || "[]");
-            if (!aprobadas.includes(mudanzaId)) { aprobadas.push(mudanzaId); localStorage.setItem(`fletero_aprobadas_manual_${fleteroIdActual}`, JSON.stringify(aprobadas)); }
-            await fetch(`${API_URL}/ofertas/${ofertaId}/aceptar`, { method: "PUT", headers: { "Content-Type": "application/json" } });
-            cargarDatosDashboard();
+            try {
+                const res = await fetch(`${API_URL}/mudanzas/${mudanzaId}/aprobar-fletero`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" }
+                });
+                await fetch(`${API_URL}/ofertas/${ofertaId}/aceptar`, { method: "PUT", headers: { "Content-Type": "application/json" } });
+                
+                if (res.ok) {
+                    alert("¡Mudanza aprobada con éxito en la base de datos!");
+                    cargarDatosDashboard();
+                } else {
+                    alert("Error al sincronizar la aprobación en el servidor.");
+                }
+            } catch (err) {
+                alert("Error de conexión al aprobar la mudanza.");
+            }
         }
 
         function marcarComoFinalizadoFletero(mudanzaId) {
@@ -688,10 +701,6 @@
                 eliminadasSol.push(mId);
                 localStorage.setItem(`fletero_sol_eliminadas_${fleteroIdActual}`, JSON.stringify(eliminadasSol));
             }
-
-            let aprobadas = JSON.parse(localStorage.getItem(`fletero_aprobadas_manual_${fleteroIdActual}`) || "[]");
-            aprobadas = aprobadas.filter(id => id !== mId);
-            localStorage.setItem(`fletero_aprobadas_manual_${fleteroIdActual}`, JSON.stringify(aprobadas));
 
             document.getElementById(`tarjeta_traslado_${mId}`)?.remove(); 
             try {

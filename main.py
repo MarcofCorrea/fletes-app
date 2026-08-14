@@ -22,6 +22,12 @@ except Exception:
 
 try:
     with engine.begin() as connection:
+        connection.execute(text("ALTER TABLE mudanzas ADD COLUMN fletero_aprobo BOOLEAN DEFAULT FALSE"))
+except Exception:
+    pass
+
+try:
+    with engine.begin() as connection:
         connection.execute(text("ALTER TABLE usuarios ADD COLUMN cbu_cvu VARCHAR"))
         connection.execute(text("ALTER TABLE usuarios ADD COLUMN alias_bancario VARCHAR"))
         connection.execute(text("ALTER TABLE usuarios ADD COLUMN nombre_banco VARCHAR"))
@@ -87,6 +93,25 @@ class ReseñaCreate(BaseModel):
     calificado_id: int
     estrellas: int
     comentario: Optional[str] = "Sin comentarios"
+
+# NUEVO ENDPOINT PARA GUARDAR LA APROBACIÓN DEL FLETERO EN BASE DE DATOS
+@app.put("/mudanzas/{mudanza_id}/aprobar-fletero")
+def aprobar_mudanza_fletero(mudanza_id: int):
+    from database import SessionLocal
+    db = SessionLocal()
+    try:
+        mudanza = db.query(MudanzaDB).filter(MudanzaDB.id == mudanza_id).first()
+        if not mudanza:
+            raise HTTPException(status_code=404, detail="Mudanza no encontrada")
+        mudanza.fletero_aprobo = True
+        db.commit()
+        return {"status": "success", "mensaje": "Mudanza aprobada por el fletero en la base de datos"}
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        db.close()
 
 @app.post("/reseñas")
 def crear_reseña(res: ReseñaCreate):
