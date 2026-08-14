@@ -355,26 +355,25 @@
                         }
 
                         let seccionCalificacionFletero = "";
-                        if (estaFinalizadaFletero && estaPagado) {
-                            const yaCalificoCli = localStorage.getItem(`reseñas_mudanza_${m.id}_fletero`);
-                            if (yaCalificoCli) {
-                                seccionCalificacionFletero = `<div class="bg-white p-2 rounded border text-xs text-emerald-700 font-semibold text-center mt-2">✅ Comentario enviado</div>`;
-                            } else {
-                                seccionCalificacionFletero = `
-                                    <div class="bg-white p-3 rounded-lg border border-amber-200 space-y-2 mt-2 text-xs">
-                                        <div class="font-bold text-slate-700">⭐ Valora al Cliente (${nombreCliente}):</div>
-                                        <div class="flex gap-1" id="estrellas_f_${m.id}">
-                                            <span onclick="seleccionarEstrellasF(${m.id}, 1)" class="cursor-pointer text-slate-300 text-lg hover:text-amber-400 star-f-${m.id}">★</span>
-                                            <span onclick="seleccionarEstrellasF(${m.id}, 2)" class="cursor-pointer text-slate-300 text-lg hover:text-amber-400 star-f-${m.id}">★</span>
-                                            <span onclick="seleccionarEstrellasF(${m.id}, 3)" class="cursor-pointer text-slate-300 text-lg hover:text-amber-400 star-f-${m.id}">★</span>
-                                            <span onclick="seleccionarEstrellasF(${m.id}, 4)" class="cursor-pointer text-slate-300 text-lg hover:text-amber-400 star-f-${m.id}">★</span>
-                                            <span onclick="seleccionarEstrellasF(${m.id}, 5)" class="cursor-pointer text-slate-300 text-lg hover:text-amber-400 star-f-${m.id}">★</span>
-                                        </div>
-                                        <input type="hidden" id="val_estrellas_f_${m.id}" value="5">
-                                        <textarea id="comentario_f_${m.id}" placeholder="¿Cómo fue tu experiencia con el cliente?" class="w-full p-1.5 border rounded text-xs bg-slate-50"></textarea>
-                                        <button onclick="enviarCalificacionFletero(${m.id}, ${m.cliente_id})" class="w-full bg-emerald-600 text-white py-1.5 rounded font-semibold">Enviar Valoración</button>
-                                    </div>`;
-                            }
+                        const yaCalificoCli = localStorage.getItem(`reseñas_mudanza_${m.id}_fletero`);
+
+                        if (yaCalificoCli) {
+                            seccionCalificacionFletero = `<div class="bg-white p-2.5 rounded border text-xs text-emerald-700 font-semibold text-center mt-2">✅ Comentario enviado con éxito</div>`;
+                        } else if (estaFinalizadaFletero && estaPagado) {
+                            seccionCalificacionFletero = `
+                                <div class="bg-white p-3 rounded-lg border border-amber-200 space-y-2 mt-2 text-xs">
+                                    <div class="font-bold text-slate-700">⭐ Valora al Cliente (${nombreCliente}):</div>
+                                    <div class="flex gap-1" id="estrellas_f_${m.id}">
+                                        <span onclick="seleccionarEstrellasF(${m.id}, 1)" class="cursor-pointer text-slate-300 text-lg hover:text-amber-400 star-f-${m.id}">★</span>
+                                        <span onclick="seleccionarEstrellasF(${m.id}, 2)" class="cursor-pointer text-slate-300 text-lg hover:text-amber-400 star-f-${m.id}">★</span>
+                                        <span onclick="seleccionarEstrellasF(${m.id}, 3)" class="cursor-pointer text-slate-300 text-lg hover:text-amber-400 star-f-${m.id}">★</span>
+                                        <span onclick="seleccionarEstrellasF(${m.id}, 4)" class="cursor-pointer text-slate-300 text-lg hover:text-amber-400 star-f-${m.id}">★</span>
+                                        <span onclick="seleccionarEstrellasF(${m.id}, 5)" class="cursor-pointer text-slate-300 text-lg hover:text-amber-400 star-f-${m.id}">★</span>
+                                    </div>
+                                    <input type="hidden" id="val_estrellas_f_${m.id}" value="5">
+                                    <textarea id="comentario_f_${m.id}" placeholder="¿Cómo fue tu experiencia con el cliente?" class="w-full p-1.5 border rounded text-xs bg-slate-50"></textarea>
+                                    <button onclick="enviarCalificacionFletero(${m.id}, ${m.cliente_id})" class="w-full bg-emerald-600 text-white py-1.5 rounded font-semibold">Enviar Valoración</button>
+                                </div>`;
                         }
 
                         arrayAprobadas.push({
@@ -532,16 +531,6 @@
             reseñasCliente.push(nuevaReseña);
             localStorage.setItem(`reseñas_usuario_cliente_${clienteId}`, JSON.stringify(reseñasCliente));
             localStorage.setItem(`reseñas_mudanza_${mudanzaId}_fletero`, "true");
-            
-            const contenedorCalif = document.getElementById(`contenedor_calif_${mudanzaId}`);
-            if (contenedorCalif) {
-                contenedorCalif.outerHTML = `<div class="bg-white p-2.5 rounded border text-xs text-emerald-700 font-semibold text-center mt-2">✅ Comentario enviado con éxito</div>`;
-            } else if (comentarioInput) {
-                const contenedorBloque = comentarioInput.closest('.border');
-                if (contenedorBloque) {
-                    contenedorBloque.outerHTML = `<div class="bg-white p-2.5 rounded border text-xs text-emerald-700 font-semibold text-center mt-2">✅ Comentario enviado con éxito</div>`;
-                }
-            }
             
             cargarDatosDashboard();
         }
