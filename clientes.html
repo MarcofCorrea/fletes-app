@@ -546,8 +546,9 @@
                     }
 
                     const ofertaAceptadaPorCliente = ofertas ? ofertas.find(o => o.estado === 'aceptada' || o.estado === 'aprobada') : null;
-                    // Requerimos que la oferta esté aprobada (tanto cliente como fletero OK) para pasarla
-                    const fleteroYaAprobo = (ofertaAceptadaPorCliente && ofertaAceptadaPorCliente.estado === 'aprobada') || estaFinalizada;
+                    
+                    // Doble validación estricta: El cliente debe haber aceptado la oferta Y el fletero debe haber hecho su aprobación (guardada localmente o en backend)
+                    const fleteroYaAprobo = (ofertaAceptadaPorCliente && (localStorage.getItem(`fletero_aprobo_mudanza_${m.id}`) === "true" || ofertaAceptadaPorCliente.estado === 'aprobada')) || estaFinalizada;
 
                     if (!fleteroYaAprobo) {
                         tieneSolicitudesActivas = true;
