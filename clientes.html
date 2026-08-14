@@ -846,7 +846,8 @@
 
                 const data = await res.json();
                 if (res.ok) {
-                    cargarMisMudanzas();
+                    ultimoEstadoClienteJson = ""; // Fuerza la actualización inmediata de la interfaz
+                    await cargarMisMudanzas();     // Refresca la pantalla al instante
                 } else {
                     alert(data.detail || "No se pudo enviar la reseña.");
                     btn.disabled = false;
