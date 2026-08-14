@@ -817,14 +817,30 @@
         }
 
         function enviarCalificacionCliente(mudanzaId, fleteroId) {
-            const estrellas = document.getElementById(`val_estrellas_c_${mudanzaId}`).value;
-            const comentario = document.getElementById(`comentario_c_${mudanzaId}`).value;
-            const nuevaReseña = { autor: "Cliente", estrellas: parseInt(estrellas), comentario: comentario || "Sin comentarios", fecha: new Date().toLocaleDateString() };
+            const estrellasInput = document.getElementById(`val_estrellas_c_${mudanzaId}`);
+            const comentarioInput = document.getElementById(`comentario_c_${mudanzaId}`);
+            
+            const estrellas = estrellasInput ? estrellasInput.value : "5";
+            const comentario = comentarioInput ? comentarioInput.value : "";
+            
+            const nuevaReseña = { 
+                autor: "Cliente", 
+                estrellas: parseInt(estrellas), 
+                comentario: comentario || "Sin comentarios", 
+                fecha: new Date().toLocaleDateString() 
+            };
 
             let reseñasFletero = JSON.parse(localStorage.getItem(`reseñas_usuario_fletero_${fleteroId}`) || "[]");
             reseñasFletero.push(nuevaReseña);
             localStorage.setItem(`reseñas_usuario_fletero_${fleteroId}`, JSON.stringify(reseñasFletero));
             localStorage.setItem(`reseñas_mudanza_${mudanzaId}_cliente`, "true");
+            
+            if (comentarioInput) {
+                const contenedorBloque = comentarioInput.closest('.border');
+                if (contenedorBloque) {
+                    contenedorBloque.outerHTML = `<div class="bg-white p-2.5 rounded border text-xs text-emerald-700 font-semibold text-center mt-2">✅ Comentario enviado con éxito</div>`;
+                }
+            }
             
             cargarMisMudanzas();
         }
