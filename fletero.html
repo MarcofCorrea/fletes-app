@@ -287,8 +287,7 @@
                     let calificacionCliente = "⭐⭐⭐⭐⭐ (5.0)";
                     
                     try {
-                        let resCliente = await fetch(`${API_URL}/usuarios/${m.cliente_id}`);
-                        if (!resCliente.ok) resCliente = await fetch(`${API_URL}/clientes/${m.cliente_id}`);
+                        let resCliente = await fetch(`${API_URL}/clientes/${m.cliente_id}`);
                         if (resCliente.ok) {
                             const cliData = await resCliente.json();
                             const clienteObj = cliData.cliente || cliData;
