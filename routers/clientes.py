@@ -6,6 +6,12 @@ from schemas import ClienteCreate, LoginRequest
 
 router = APIRouter(tags=["Clientes"])
 
+@router.get("", status_code=status.HTTP_200_OK)
+@router.get("/", status_code=status.HTTP_200_OK)
+def listar_clientes(db: Session = Depends(get_db)):
+    clientes = db.query(UsuarioDB).filter(UsuarioDB.tipo == "cliente").all()
+    return clientes
+
 @router.post("", status_code=status.HTTP_201_CREATED)
 @router.post("/", status_code=status.HTTP_201_CREATED)
 def registrar_cliente(cliente: ClienteCreate, db: Session = Depends(get_db)):
