@@ -65,19 +65,32 @@
 
         <!-- PANTALLA DASHBOARD -->
         <div id="pantallaDashboard" class="flex-1 flex flex-col" style="display: none;">
-            <div class="flex border-b bg-slate-900 text-white text-[11px]">
-                <button onclick="cambiarTabDashboard('solicitudes')" id="navSolicitudes" class="flex-1 py-3 text-center border-b-2 border-emerald-400 font-semibold">Solicitudes</button>
-                <button onclick="cambiarTabDashboard('traslados')" id="navTraslados" class="flex-1 py-3 text-center">Aprobadas</button>
-                <button onclick="cambiarTabDashboard('cuenta')" id="navCuenta" class="flex-1 py-3 text-center">Cuenta</button>
-                <button onclick="cambiarTabDashboard('soporte')" id="navSoporte" class="flex-1 py-3 text-center">Soporte</button>
+            <div class="flex border-b bg-slate-950 text-white text-[10px] overflow-x-auto">
+                <button onclick="cambiarTabDashboard('solicitudes')" id="navSolicitudes" class="flex-1 py-3 px-2 text-center border-b-2 border-emerald-400 font-semibold whitespace-nowrap">Solicitudes</button>
+                <button onclick="cambiarTabDashboard('traslados')" id="navTraslados" class="flex-1 py-3 px-2 text-center whitespace-nowrap">Aprobadas</button>
+                <button onclick="cambiarTabDashboard('calendario')" id="navCalendario" class="flex-1 py-3 px-2 text-center whitespace-nowrap">📅 Calendario</button>
+                <button onclick="cambiarTabDashboard('cuenta')" id="navCuenta" class="flex-1 py-3 px-2 text-center whitespace-nowrap">Cuenta</button>
+                <button onclick="cambiarTabDashboard('notificaciones')" id="navNotificaciones" class="flex-1 py-3 px-2 text-center whitespace-nowrap">🔔 Notificaciones</button>
+                <button onclick="cambiarTabDashboard('soporte')" id="navSoporte" class="flex-1 py-3 px-2 text-center whitespace-nowrap">Soporte</button>
             </div>
-            <div class="p-4 overflow-y-auto flex-1">
+            <div class="p-4 overflow-y-auto flex-1 space-y-6">
                 <div id="seccionSolicitudes">
                     <div id="listaMudanzas" class="space-y-4"></div>
                 </div>
                 <div id="seccionTraslados" style="display:none;" class="space-y-4">
                     <h2 class="font-bold text-base text-slate-800 mb-2">🚀 Mudanzas Aprobadas</h2>
                     <div id="listaTrasladosAprobados" class="space-y-4"></div>
+                </div>
+
+                <!-- SECCIÓN CALENDARIO -->
+                <div id="seccionCalendario" style="display:none;" class="space-y-4">
+                    <h2 class="font-bold text-base text-slate-800 mb-2">📅 Calendario de Mudanzas Agendadas</h2>
+                    <div class="bg-slate-100 border border-slate-300 p-3 rounded-xl text-xs text-slate-700">
+                        ℹ️ Tus servicios aprobados se ordenan aquí por fecha y hora con alertas activas 2 horas y 30 minutos antes.
+                    </div>
+                    <div id="listaCalendarioMudanzasFletero" class="space-y-3">
+                        <p class="text-sm text-slate-500 text-center py-4">No hay mudanzas agendadas en el calendario.</p>
+                    </div>
                 </div>
                 
                 <!-- SECCIÓN CUENTA (FLETERO) -->
@@ -124,6 +137,20 @@
                     </div>
 
                     <button onclick="guardarPerfilFletero()" class="w-full bg-slate-900 text-white p-3 rounded-lg text-sm font-semibold">Guardar Cambios</button>
+                </div>
+
+                <!-- SECCIÓN NOTIFICACIONES -->
+                <div id="seccionNotificaciones" style="display:none;" class="space-y-4">
+                    <div class="flex justify-between items-center">
+                        <h2 class="font-bold text-base text-slate-800">🔔 Centro de Notificaciones</h2>
+                        <button onclick="solicitarPermisoNotificaciones()" class="bg-slate-900 text-white px-3 py-1.5 rounded-lg text-xs font-semibold shadow">Activar Permisos</button>
+                    </div>
+                    <div class="bg-slate-50 p-3 rounded-xl border text-xs text-slate-600">
+                        📌 Aquí verás los avisos de tus servicios agendadas y cuando tus ofertas sean aceptadas.
+                    </div>
+                    <div id="listaCentroNotificacionesFletero" class="space-y-2">
+                        <div class="bg-white p-3 rounded-xl border text-xs text-slate-500 text-center">No hay notificaciones nuevas.</div>
+                    </div>
                 </div>
 
                 <div id="seccionSoporte" style="display:none;" class="space-y-4">
@@ -385,6 +412,13 @@
                         }
 
                         arrayAprobadas.push({
+                            id: m.id,
+                            fecha: fechaOriginal,
+                            hora: horaOriginal,
+                            origen: m.origen_direccion,
+                            destino: m.destino_direccion,
+                            carga: textoCargaReal,
+                            monto: montoAcordado,
                             timestamp: new Date(`${fechaOrdenKey}T${horaOrdenKey}`).getTime(),
                             html: `
                                 <div id="tarjeta_traslado_${m.id}" class="bg-emerald-50 p-4 rounded-xl border border-emerald-200 space-y-3 text-sm relative">
@@ -396,6 +430,7 @@
                                         <div>📞 <strong>Teléfono:</strong> ${contactoClienteHtml}</div>
                                     </div>
                                     <div class="text-xs">📍 Origen: ${m.origen_direccion} ➔ Destino: ${m.destino_direccion}</div>
+                                    ${fechaOriginal && horaOriginal ? `<div class="text-xs text-emerald-800 font-bold">📅 Programada: ${fechaOriginal} - ${horaOriginal}</div>` : ''}
                                     <div class="flex justify-between text-xs pt-1"><span>💰 $${montoAcordado}</span> ${estadoPagoHtml}</div>
                                     ${seccionFinalizacionFletero}
                                     ${seccionCalificacionFletero}
@@ -444,6 +479,17 @@
                             htmlOfertasCargadas += `</div>`;
                         }
 
+                        // Revisar si alguna oferta fue aceptada para notificar
+                        ofertasDeEstaMudanza.forEach(o => {
+                            if (o.estado === 'aceptada' || o.estado === 'aprobada') {
+                                const claveNotif = `notif_fletero_aceptada_${o.id}`;
+                                if (!localStorage.getItem(claveNotif)) {
+                                    localStorage.setItem(claveNotif, "enviada");
+                                    registrarNotificacionEnHistorialFletero(`El cliente aceptó tu oferta de $${o.monto_oferta} en la mudanza #${m.id}`);
+                                }
+                            }
+                        });
+
                         const origenMap = encodeURIComponent(m.origen_direccion || '');
                         const destinoMap = encodeURIComponent(m.destino_direccion || '');
                         const mapEmbedUrl = `https://maps.google.com/maps?q=${origenMap}+to+${destinoMap}&output=embed`;
@@ -479,6 +525,7 @@
                                     <div>📍 De: ${m.origen_direccion}</div>
                                     <div>🏁 A: ${m.destino_direccion}</div>
                                     <div>📋 ${textoCargaReal}</div>
+                                    ${fechaOriginal && horaOriginal ? `<div class="text-xs text-blue-700 font-semibold">📅 Programada: ${fechaOriginal} - ${horaOriginal}</div>` : ''}
                                     <div class="text-emerald-700 font-semibold pt-1">💡 Monto mínimo orientativo sugerido: $${montoMinimoCalculado}</div>
                                 </div>
                                 ${seccionOfertarHtml}
@@ -492,12 +539,112 @@
 
                 arrayAprobadas.sort((a, b) => a.timestamp - b.timestamp);
                 arrayAprobadas.forEach(item => { contTraslados.innerHTML += item.html; });
+
+                // Renderizar Calendario y Notificaciones del Fletero
+                renderizarCalendarioYNotificacionesFletero(arrayAprobadas);
+
             } catch (e) {}
         }
 
-async function aprobarTrasladoFletero(mudanzaId, ofertaId) {
+        // LÓGICA DE CALENDARIO Y NOTIFICACIONES PARA FLETERO
+        function renderizarCalendarioYNotificacionesFletero(arrayAprobadas) {
+            const contCal = document.getElementById("listaCalendarioMudanzasFletero");
+            const contNotif = document.getElementById("listaCentroNotificacionesFletero");
+            if (!contCal || !contNotif) return;
+
+            // 1. Calendario
+            if (arrayAprobadas.length === 0) {
+                contCal.innerHTML = `<p class="text-sm text-slate-500 text-center py-4">No hay mudanzas aprobadas agendadas.</p>`;
+            } else {
+                contCal.innerHTML = "";
+                arrayAprobadas.forEach(m => {
+                    contCal.innerHTML += `
+                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-300 space-y-1 text-xs">
+                            <div class="flex justify-between font-bold text-slate-900">
+                                <span>📅 Fecha: ${m.fecha} - ${m.hora}</span>
+                                <span class="bg-slate-200 text-slate-900 px-2 py-0.5 rounded text-[10px]">Mudanza #${m.id}</span>
+                            </div>
+                            <div>📍 <strong>Origen:</strong> ${m.origen}</div>
+                            <div>🏁 <strong>Destino:</strong> ${m.destino}</div>
+                            <div>📦 <strong>Carga:</strong> ${m.carga}</div>
+                            <div>💰 <strong>Monto Acordado:</strong> $${m.monto}</div>
+                        </div>
+                    `;
+                });
+            }
+
+            // 2. Notificaciones Historial
+            let historial = JSON.parse(localStorage.getItem(`historial_notif_fletero_${fleteroIdActual}`) || "[]");
+            if (historial.length === 0) {
+                contNotif.innerHTML = `<div class="bg-white p-3 rounded-xl border text-xs text-slate-500 text-center">No hay notificaciones nuevas.</div>`;
+            } else {
+                contNotif.innerHTML = "";
+                historial.forEach(n => {
+                    contNotif.innerHTML += `
+                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs space-y-0.5">
+                            <div class="font-bold text-slate-800">🔔 ${n.texto}</div>
+                            <div class="text-[10px] text-slate-400">${n.fecha}</div>
+                        </div>
+                    `;
+                });
+            }
+
+            // Verificador de alertas temporales (2hs y 30min)
+            verificarAlertasTiempoFletero(arrayAprobadas);
+        }
+
+        function solicitarPermisoNotificaciones() {
+            if (!("Notification" in window)) {
+                alert("Tu navegador no soporta notificaciones de escritorio.");
+                return;
+            }
+            Notification.requestPermission().then(permission => {
+                if (permission === "granted") {
+                    alert("¡Notificaciones activadas con éxito!");
+                } else {
+                    alert("Permiso de notificaciones denegado.");
+                }
+            });
+        }
+
+        function registrarNotificacionEnHistorialFletero(texto) {
+            let hist = JSON.parse(localStorage.getItem(`historial_notif_fletero_${fleteroIdActual}`) || "[]");
+            if (hist.length > 0 && hist[0].texto === texto) return;
+            hist.unshift({ texto, fecha: new Date().toLocaleString() });
+            localStorage.setItem(`historial_notif_fletero_${fleteroIdActual}`, JSON.stringify(hist));
+        }
+
+        function verificarAlertasTiempoFletero(arrayAprobadas) {
+            const ahora = new Date().getTime();
+
+            arrayAprobadas.forEach(m => {
+                if (!m.timestamp) return;
+                const diferenciaMs = m.timestamp - ahora;
+                const dosHorasMs = 2 * 60 * 60 * 1000;
+                const treintaMinMs = 30 * 60 * 1000;
+
+                if (diferenciaMs <= dosHorasMs && diferenciaMs > (dosHorasMs - 60000) && !localStorage.getItem(`notif_2h_fletero_${m.id}`)) {
+                    localStorage.setItem(`notif_2h_fletero_${m.id}`, "enviada");
+                    const msg = `Faltan 2 horas para el traslado #${m.id} (${m.origen} ➔ ${m.destino})`;
+                    registrarNotificacionEnHistorialFletero(msg);
+                    if (Notification.permission === "granted") {
+                        new Notification("🚚 Alerta de Servicio Próximo", { body: msg });
+                    }
+                }
+
+                if (diferenciaMs <= treintaMinMs && diferenciaMs > (treintaMinMs - 60000) && !localStorage.getItem(`notif_30m_fletero_${m.id}`)) {
+                    localStorage.setItem(`notif_30m_fletero_${m.id}`, "enviada");
+                    const msg = `⚠️ ¡Atención! Faltan 30 minutos para iniciar la mudanza #${m.id}. ¡Prepárate!`;
+                    registrarNotificacionEnHistorialFletero(msg);
+                    if (Notification.permission === "granted") {
+                        new Notification("⚠️ Servicio Inminente", { body: msg });
+                    }
+                }
+            });
+        }
+
+        async function aprobarTrasladoFletero(mudanzaId, ofertaId) {
             try {
-                // Ejecutamos las peticiones de forma independiente y secuencial segura
                 const resMudanza = await fetch(`${API_URL}/mudanzas/${mudanzaId}/aprobar-fletero`, {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" }
@@ -509,7 +656,7 @@ async function aprobarTrasladoFletero(mudanzaId, ofertaId) {
                 });
                 
                 if (resMudanza.ok || resOferta.ok) {
-                    ultimoEstadoFleteroJson = ""; // Forzamos el redibujado instantáneo de la interfaz
+                    ultimoEstadoFleteroJson = ""; 
                     alert("¡Mudanza aprobada con éxito en la base de datos!");
                     await cargarDatosDashboard();
                 } else {
@@ -564,8 +711,8 @@ async function aprobarTrasladoFletero(mudanzaId, ofertaId) {
 
                 const data = await res.json();
                 if (res.ok) {
-                    ultimoEstadoFleteroJson = ""; // Fuerza la actualización inmediata de la interfaz
-                    await cargarDatosDashboard();   // Refresca la pantalla al instante
+                    ultimoEstadoFleteroJson = ""; 
+                    await cargarDatosDashboard();   
                 } else {
                     alert(data.detail || "No se pudo enviar la reseña.");
                     btn.disabled = false;
@@ -579,16 +726,20 @@ async function aprobarTrasladoFletero(mudanzaId, ofertaId) {
         function cambiarTabDashboard(s) { 
             document.getElementById("seccionSolicitudes").style.display = s==='solicitudes' ? 'block' : 'none';
             document.getElementById("seccionTraslados").style.display = s==='traslados' ? 'block' : 'none';
+            document.getElementById("seccionCalendario").style.display = s==='calendario' ? 'block' : 'none';
             document.getElementById("seccionCuenta").style.display = s==='cuenta' ? 'block' : 'none';
+            document.getElementById("seccionNotificaciones").style.display = s==='notificaciones' ? 'block' : 'none';
             document.getElementById("seccionSoporte").style.display = s==='soporte' ? 'block' : 'none';
 
-            ['navSolicitudes', 'navTraslados', 'navCuenta', 'navSoporte'].forEach(id => {
+            ['navSolicitudes', 'navTraslados', 'navCalendario', 'navCuenta', 'navNotificaciones', 'navSoporte'].forEach(id => {
                 const btn = document.getElementById(id);
                 if(btn) btn.classList.remove("border-b-2", "border-emerald-400", "font-semibold");
             });
             if(s==='solicitudes') document.getElementById("navSolicitudes").classList.add("border-b-2", "border-emerald-400", "font-semibold");
             if(s==='traslados') { document.getElementById("navTraslados").classList.add("border-b-2", "border-emerald-400", "font-semibold"); cargarDatosDashboard(); }
+            if(s==='calendario') { document.getElementById("navCalendario").classList.add("border-b-2", "border-emerald-400", "font-semibold"); cargarDatosDashboard(); }
             if(s==='cuenta') { document.getElementById("navCuenta").classList.add("border-b-2", "border-emerald-400", "font-semibold"); cargarDatosPerfil(); }
+            if(s==='notificaciones') { document.getElementById("navNotificaciones").classList.add("border-b-2", "border-emerald-400", "font-semibold"); cargarDatosDashboard(); }
             if(s==='soporte') document.getElementById("navSoporte").classList.add("border-b-2", "border-emerald-400", "font-semibold");
         }
 
@@ -652,7 +803,7 @@ async function aprobarTrasladoFletero(mudanzaId, ofertaId) {
                 const reseñas = res.ok ? await res.json() : [];
 
                 if (reseñas.length === 0) {
-                    lista.innerHTML = `<p class="text-sm text-slate-500 text-center py-4">Este usuario aún no tiene comentarios.</p>`;
+                    lista.innerHTML = `<p class="text-sm text-slate-500 text-center py-4">Este usuario aún não tiene comentarios.</p>`;
                     return;
                 }
                 lista.innerHTML = "";
