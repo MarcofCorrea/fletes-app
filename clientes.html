@@ -546,7 +546,8 @@
                     }
 
                     const ofertaAceptadaPorCliente = ofertas ? ofertas.find(o => o.estado === 'aceptada' || o.estado === 'aprobada') : null;
-                    const fleteroYaAprobo = (ofertaAceptadaPorCliente) || estaFinalizada;
+                    // Requerimos que la oferta esté aprobada (tanto cliente como fletero OK) para pasarla
+                    const fleteroYaAprobo = (ofertaAceptadaPorCliente && ofertaAceptadaPorCliente.estado === 'aprobada') || estaFinalizada;
 
                     if (!fleteroYaAprobo) {
                         tieneSolicitudesActivas = true;
@@ -615,7 +616,7 @@
                                             ${esLaUltima ? `
                                                 <div class="pt-1.5 border-t flex justify-end">
                                                     ${esEstaAceptada ? 
-                                                        '<span class="bg-amber-100 text-amber-800 px-2.5 py-1 rounded font-bold text-xs">⏳ Pre-aprobada</span>' : 
+                                                        '<span class="bg-amber-100 text-amber-800 px-2.5 py-1 rounded font-bold text-xs">⏳ Pre-aprobada (Esperando confirmación del fletero)</span>' : 
                                                         `<button type="button" onclick="aceptarOferta(${o.id})" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded font-semibold">Aceptar Oferta</button>`
                                                     }
                                                 </div>` : ''}
@@ -950,7 +951,7 @@
 
         async function aceptarOferta(ofertaId) {
             const res = await fetch(`${API_URL}/ofertas/${ofertaId}/aceptar`, { method: "PUT", headers: { "Content-Type": "application/json" } });
-            if (res.ok) { alert("¡Oferta aceptada!"); cargarMisMudanzas(); }
+            if (res.ok) { alert("¡Oferta aceptada! Esperando aprobación final del fletero."); cargarMisMudanzas(); }
         }
 
         async function guardarPerfilCliente() {

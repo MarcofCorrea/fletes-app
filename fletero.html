@@ -321,7 +321,8 @@
                     const ofertaAceptadaCliente = ofertasDeEstaMudanza.find(o => o.estado === 'aceptada' || o.estado === 'aprobada');
                     const clienteAcepto = !!ofertaAceptadaCliente;
 
-                    if (aprobadasPorFletero.includes(m.id)) {
+                    // Requerimos tanto el OK del fletero como la aceptación del cliente para pasar a aprobadas
+                    if (aprobadasPorFletero.includes(m.id) && clienteAcepto) {
                         const montoAcordado = ofertaAceptadaCliente ? ofertaAceptadaCliente.monto_oferta : '0';
                         const estaPagado = m.estado_pago === "pagado" || m.estado === 'finalizada'; 
                         const estaFinalizadaFletero = finalizadasFleteroLocal.includes(m.id);
