@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from database import get_db
 from models import UsuarioDB
 from schemas import ClienteCreate, LoginRequest
-from pydintic import BaseModel # o pydantic
+from pydantic import BaseModel # o pydantic
 from typing import Optional
 
 router = APIRouter(tags=["Clientes"])
