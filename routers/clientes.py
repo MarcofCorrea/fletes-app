@@ -3,8 +3,15 @@ from sqlalchemy.orm import Session
 from database import get_db
 from models import UsuarioDB
 from schemas import ClienteCreate, LoginRequest
+from pydintic import BaseModel # o pydantic
+from typing import Optional
 
 router = APIRouter(tags=["Clientes"])
+
+class ClienteUpdate(BaseModel):
+    nombre: Optional[str] = None
+    email: Optional[str] = None
+    telefono: Optional[str] = None
 
 @router.get("", status_code=status.HTTP_200_OK)
 @router.get("/", status_code=status.HTTP_200_OK)
@@ -43,6 +50,22 @@ def login_cliente(credenciales: LoginRequest, db: Session = Depends(get_db)):
     if not cliente or cliente.password != credenciales.password:
         raise HTTPException(status_code=400, detail="Correo o contraseña incorrectos")
     return {"mensaje": "Login exitoso", "cliente": {"id": cliente.id, "nombre": cliente.nombre}}
+
+@router.put("/{cliente_id}")
+@router.put("/{cliente_id}/")
+def actualizar_cliente(cliente_id: int, datos: ClienteUpdate, db: Session = Depends(get_db)):
+    cliente = db.query(UsuarioDB).filter(UsuarioDB.id == cliente_id, UsuarioDB.tipo == "cliente").first()
+    if not cliente:
+        raise HTTPException(status_code=404, detail="Cliente no encontrado")
+    if datos.nombre is not None:
+        cliente.nombre = datos.nombre
+    if datos.email is not None:
+        cliente.email = datos.email
+    if datos.telefono is not None:
+        cliente.telefono = datos.telefono
+    db.commit()
+    db.refresh(cliente)
+    return {"mensaje": "Perfil actualizado con éxito", "cliente": cliente}
 
 @router.get("/{cliente_id}/mudanzas")
 @router.get("/{cliente_id}/mudanzas/")
