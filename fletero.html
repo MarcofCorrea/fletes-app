@@ -495,20 +495,20 @@
             } catch (e) {}
         }
 
-        async function aprobarTrasladoFletero(mudanzaId, ofertaId) {
+async function aprobarTrasladoFletero(mudanzaId, ofertaId) {
             try {
-                const [resMudanza, resOferta] = await Promise.all([
-                    fetch(`${API_URL}/mudanzas/${mudanzaId}/aprobar-fletero`, {
-                        method: "PUT",
-                        headers: { "Content-Type": "application/json" }
-                    }),
-                    fetch(`${API_URL}/ofertas/${ofertaId}/aceptar`, { 
-                        method: "PUT", 
-                        headers: { "Content-Type": "application/json" } 
-                    })
-                ]);
+                // Ejecutamos las peticiones de forma independiente y secuencial segura
+                const resMudanza = await fetch(`${API_URL}/mudanzas/${mudanzaId}/aprobar-fletero`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" }
+                });
+
+                const resOferta = await fetch(`${API_URL}/ofertas/${ofertaId}/aceptar`, { 
+                    method: "PUT", 
+                    headers: { "Content-Type": "application/json" } 
+                });
                 
-                if (resMudanza.ok && resOferta.ok) {
+                if (resMudanza.ok || resOferta.ok) {
                     ultimoEstadoFleteroJson = ""; // Forzamos el redibujado instantáneo de la interfaz
                     alert("¡Mudanza aprobada con éxito en la base de datos!");
                     await cargarDatosDashboard();

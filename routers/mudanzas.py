@@ -19,7 +19,8 @@ def crear_mudanza(mudanza: MudanzaCreate, db: Session = Depends(get_db)):
         destino_direccion=mudanza.destino_direccion,
         descripcion_carga=mudanza.descripcion_carga,
         estado="buscando_ofertas",
-        estado_pago="pendiente"
+        estado_pago="pendiente",
+        fletero_aprobo=False
     )
     db.add(nueva_mudanza)
     db.commit()
@@ -32,7 +33,8 @@ def crear_mudanza(mudanza: MudanzaCreate, db: Session = Depends(get_db)):
         "destino_direccion": nueva_mudanza.destino_direccion,
         "descripcion_carga": nueva_mudanza.descripcion_carga,
         "estado": getattr(nueva_mudanza, "estado", "buscando_ofertas"),
-        "estado_pago": getattr(nueva_mudanza, "estado_pago", "pendiente")
+        "estado_pago": getattr(nueva_mudanza, "estado_pago", "pendiente"),
+        "fletero_aprobo": getattr(nueva_mudanza, "fletero_aprobo", False)
     }
 
     return {"mensaje": "Mudanza publicada con éxito", "mudanza": mudanza_dict}
@@ -54,7 +56,7 @@ def listar_mudanzas(db: Session = Depends(get_db)):
         } for o in ofertas_db]
 
         resultado.append({
-            # Propiedades planas para que el panel del fletero las lea directamente (m.id, m.cliente_id, etc.)
+            # Propiedades planas para el panel del fletero
             "id": m.id,
             "cliente_id": m.cliente_id,
             "origen_direccion": m.origen_direccion,
@@ -62,8 +64,9 @@ def listar_mudanzas(db: Session = Depends(get_db)):
             "descripcion_carga": m.descripcion_carga,
             "estado": getattr(m, "estado", "buscando_ofertas"),
             "estado_pago": getattr(m, "estado_pago", "pendiente"),
+            "fletero_aprobo": getattr(m, "fletero_aprobo", False),
             
-            # Estructura anidada original preservada para el cliente
+            # Estructura anidada para el cliente
             "mudanza": {
                 "id": m.id,
                 "cliente_id": m.cliente_id,
@@ -71,7 +74,8 @@ def listar_mudanzas(db: Session = Depends(get_db)):
                 "destino_direccion": m.destino_direccion,
                 "descripcion_carga": m.descripcion_carga,
                 "estado": getattr(m, "estado", "buscando_ofertas"),
-                "estado_pago": getattr(m, "estado_pago", "pendiente")
+                "estado_pago": getattr(m, "estado_pago", "pendiente"),
+                "fletero_aprobo": getattr(m, "fletero_aprobo", False)
             },
             "ofertas": ofertas_serializadas
         })
@@ -101,8 +105,21 @@ def listar_mudanzas_por_cliente(cliente_id: int, db: Session = Depends(get_db)):
                 "destino_direccion": m.destino_direccion,
                 "descripcion_carga": m.descripcion_carga,
                 "estado": getattr(m, "estado", "buscando_ofertas"),
-                "estado_pago": getattr(m, "estado_pago", "pendiente")
+                "estado_pago": getattr(m, "estado_pago", "pendiente"),
+                "fletero_aprobo": getattr(m, "fletero_aprobo", False)
             },
             "ofertas": ofertas_serializadas
         })
     return resultado
+
+@router.put("/{mudanza_id}/aprobar-fletero")
+@router.put("/{mudanza_id}/aprobar-fletero/")
+def aprobar_fletero(mudanza_id: int, db: Session = Depends(get_db)):
+    mudanza = db.query(MudanzaDB).filter(MudanzaDB.id == mudanza_id).first()
+    if not mudanza:
+        raise HTTPException(status_code=404, detail="Mudanza no encontrada")
+    
+    mudanza.fletero_aprobo = True
+    db.commit()
+    db.refresh(mudanza)
+    return {"mensaje": "Mudanza aprobada por el fletero con éxito", "mudanza_id": mudanza.id}
