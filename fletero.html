@@ -104,8 +104,8 @@
                     <!-- 3. Datos personales -->
                     <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3 text-sm">
                         <h3 class="font-bold text-slate-800">Datos personales</h3>
-                        <div class="text-center bg-white p-3 rounded border shadow-sm">
-                            <span class="text-xs text-slate-500 uppercase block">Calificación</span>
+                        <div class="text-center bg-white p-3 rounded border shadow-sm cursor-pointer" onclick="verReseñasUsuario('fletero', fleteroIdActual || 1, 'Mi Perfil')">
+                            <span class="text-xs text-slate-500 font-semibold uppercase block">Calificación Promedio (Ver Comentarios)</span>
                             <span id="perfilCalificacionEstrellas" class="text-amber-500 font-bold text-lg">⭐⭐⭐⭐⭐ (5.0)</span>
                         </div>
                         <div><label class="text-xs text-slate-500 block">Nombre</label><input type="text" id="perfilNombreInput" class="w-full p-2 border rounded bg-white"></div>
