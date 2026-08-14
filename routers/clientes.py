@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from database import get_db
 from models import UsuarioDB
 from schemas import ClienteCreate, LoginRequest
-from pydantic import BaseModel # o pydantic
+from pydantic import BaseModel
 from typing import Optional
 
 router = APIRouter(tags=["Clientes"])
@@ -50,6 +50,14 @@ def login_cliente(credenciales: LoginRequest, db: Session = Depends(get_db)):
     if not cliente or cliente.password != credenciales.password:
         raise HTTPException(status_code=400, detail="Correo o contraseña incorrectos")
     return {"mensaje": "Login exitoso", "cliente": {"id": cliente.id, "nombre": cliente.nombre}}
+
+@router.get("/{cliente_id}", status_code=status.HTTP_200_OK)
+@router.get("/{cliente_id}/", status_code=status.HTTP_200_OK)
+def obtener_cliente_por_id(cliente_id: int, db: Session = Depends(get_db)):
+    cliente = db.query(UsuarioDB).filter(UsuarioDB.id == cliente_id, UsuarioDB.tipo == "cliente").first()
+    if not cliente:
+        raise HTTPException(status_code=404, detail="Cliente no encontrado")
+    return {"cliente": cliente}
 
 @router.put("/{cliente_id}")
 @router.put("/{cliente_id}/")
