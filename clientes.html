@@ -547,8 +547,8 @@
 
                     const ofertaAceptadaPorCliente = ofertas ? ofertas.find(o => o.estado === 'aceptada' || o.estado === 'aprobada') : null;
                     
-                    // Doble validación estricta: El cliente debe haber aceptado la oferta Y el fletero debe haber hecho su aprobación (guardada localmente o en backend)
-                    const fleteroYaAprobo = (ofertaAceptadaPorCliente && (localStorage.getItem(`fletero_aprobo_mudanza_${m.id}`) === "true" || ofertaAceptadaPorCliente.estado === 'aprobada')) || estaFinalizada;
+                    // CORRECCIÓN: Estrictamente requiere que el fletero haya aprobado de forma manual mediante su botón
+                    const fleteroYaAprobo = (ofertaAceptadaPorCliente && localStorage.getItem(`fletero_aprobo_mudanza_${m.id}`) === "true") || estaFinalizada;
 
                     if (!fleteroYaAprobo) {
                         tieneSolicitudesActivas = true;
@@ -617,7 +617,7 @@
                                             ${esLaUltima ? `
                                                 <div class="pt-1.5 border-t flex justify-end">
                                                     ${esEstaAceptada ? 
-                                                        '<span class="bg-amber-100 text-amber-800 px-2.5 py-1 rounded font-bold text-xs">⏳ Pre-aprobada (Esperando confirmación del fletero)</span>' : 
+                                                        '<span class="bg-amber-100 text-amber-800 px-2.5 py-1 rounded font-bold text-xs">⏳ Esperando que el fletero acepte</span>' : 
                                                         `<button type="button" onclick="aceptarOferta(${o.id})" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded font-semibold">Aceptar Oferta</button>`
                                                     }
                                                 </div>` : ''}
