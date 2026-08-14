@@ -47,3 +47,13 @@ class OfertaDB(Base):
     monto_oferta = Column(Float)
     tiempo_estimado = Column(String)
     estado = Column(String, default="pendiente")
+
+class ReseñaDB(Base):
+    __tablename__ = "reseñas"
+    id = Column(Integer, primary_key=True, index=True)
+    mudanza_id = Column(Integer, index=True)
+    autor = Column(String)  # "Cliente" o "Fletero"
+    calificado_id = Column(Integer, index=True)
+    estrellas = Column(Integer)
+    comentario = Column(String, default="Sin comentarios")
+    fecha = Column(String)

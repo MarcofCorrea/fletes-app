@@ -355,9 +355,16 @@
                         }
 
                         let seccionCalificacionFletero = "";
-                        const yaCalificoCli = localStorage.getItem(`reseñas_mudanza_${m.id}_fletero`);
+                        let yaCalificoFletero = false;
+                        try {
+                            const resR = await fetch(`${API_URL}/reseñas/mudanza/${m.id}`);
+                            if (resR.ok) {
+                                const reseñasM = await resR.json();
+                                yaCalificoFletero = reseñasM.some(r => r.autor === "Fletero");
+                            }
+                        } catch(e) {}
 
-                        if (yaCalificoCli) {
+                        if (yaCalificoFletero) {
                             seccionCalificacionFletero = `<div class="bg-white p-2.5 rounded border text-xs text-emerald-700 font-semibold text-center mt-2">✅ Comentario enviado con éxito</div>`;
                         } else if (estaFinalizadaFletero && estaPagado) {
                             seccionCalificacionFletero = `
@@ -513,26 +520,40 @@
             });
         }
 
-        function enviarCalificacionFletero(mudanzaId, clienteId) {
+        async function enviarCalificacionFletero(mudanzaId, clienteId) {
+            const btn = event.target;
+            btn.disabled = true;
+
             const estrellasInput = document.getElementById(`val_estrellas_f_${mudanzaId}`);
             const comentarioInput = document.getElementById(`comentario_f_${mudanzaId}`);
             
             const estrellas = estrellasInput ? estrellasInput.value : "5";
             const comentario = comentarioInput ? comentarioInput.value : "";
             
-            const nuevaReseña = { 
-                autor: "Fletero", 
-                estrellas: parseInt(estrellas), 
-                comentario: comentario || "Sin comentarios", 
-                fecha: new Date().toLocaleDateString() 
-            };
+            try {
+                const res = await fetch(`${API_URL}/reseñas`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        mudanza_id: parseInt(mudanzaId),
+                        autor: "Fletero",
+                        calificado_id: parseInt(clienteId),
+                        estrellas: parseInt(estrellas),
+                        comentario: comentario || "Sin comentarios"
+                    })
+                });
 
-            let reseñasCliente = JSON.parse(localStorage.getItem(`reseñas_usuario_cliente_${clienteId}`) || "[]");
-            reseñasCliente.push(nuevaReseña);
-            localStorage.setItem(`reseñas_usuario_cliente_${clienteId}`, JSON.stringify(reseñasCliente));
-            localStorage.setItem(`reseñas_mudanza_${mudanzaId}_fletero`, "true");
-            
-            cargarDatosDashboard();
+                const data = await res.json();
+                if (res.ok) {
+                    cargarDatosDashboard();
+                } else {
+                    alert(data.detail || "No se pudo enviar la reseña.");
+                    btn.disabled = false;
+                }
+            } catch (e) {
+                alert("Error de conexión con el servidor.");
+                btn.disabled = false;
+            }
         }
 
         function cambiarTabDashboard(s) { 
@@ -605,22 +626,29 @@
             const lista = document.getElementById("modalReseñasLista");
             lista.innerHTML = `<p class="text-sm text-slate-500 text-center py-4">Cargando...</p>`;
             document.getElementById("modalReseñas").style.display = "flex";
-            let reseñas = JSON.parse(localStorage.getItem(`reseñas_usuario_${tipo}_${id}`) || "[]");
-            if (reseñas.length === 0) {
-                lista.innerHTML = `<p class="text-sm text-slate-500 text-center py-4">Este usuario aún no tiene comentarios.</p>`;
-                return;
+            
+            try {
+                const res = await fetch(`${API_URL}/reseñas/usuario/${tipo}/${id}`);
+                const reseñas = res.ok ? await res.json() : [];
+
+                if (reseñas.length === 0) {
+                    lista.innerHTML = `<p class="text-sm text-slate-500 text-center py-4">Este usuario aún no tiene comentarios.</p>`;
+                    return;
+                }
+                lista.innerHTML = "";
+                reseñas.forEach(r => {
+                    let estrellasStr = "★".repeat(r.estrellas) + "☆".repeat(5 - r.estrellas);
+                    lista.innerHTML += `
+                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1 text-xs">
+                            <div class="flex justify-between font-bold text-slate-700">
+                                <span>✍️ ${r.autor}</span> <span class="text-amber-500">${estrellasStr}</span>
+                            </div>
+                            <p class="text-slate-600">"${r.comentario}"</p>
+                        </div>`;
+                });
+            } catch (e) {
+                lista.innerHTML = `<p class="text-sm text-red-500 text-center py-4">Error al cargar opiniones.</p>`;
             }
-            lista.innerHTML = "";
-            reseñas.forEach(r => {
-                let estrellasStr = "★".repeat(r.estrellas) + "☆".repeat(5 - r.estrellas);
-                lista.innerHTML += `
-                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1 text-xs">
-                        <div class="flex justify-between font-bold text-slate-700">
-                            <span>✍️ ${r.autor}</span> <span class="text-amber-500">${estrellasStr}</span>
-                        </div>
-                        <p class="text-slate-600">"${r.comentario}"</p>
-                    </div>`;
-            });
         }
 
         function cerrarModalReseñas() { document.getElementById("modalReseñas").style.display = "none"; }

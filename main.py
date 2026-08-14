@@ -1,14 +1,15 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from database import engine, Base
-from models import UsuarioDB, MudanzaDB, OfertaDB
+from models import UsuarioDB, MudanzaDB, OfertaDB, ReseñaDB
 from routers import clientes, fleteros, mudanzas, ofertas
 import mercadopago
 from pydantic import BaseModel
 from typing import Optional
 from sqlalchemy import text
 from routers import pago
+from datetime import date
 
 
 Base.metadata.create_all(bind=engine)
@@ -79,6 +80,69 @@ class CobroGuardadoIn(BaseModel):
 class CalificacionIn(BaseModel):
     usuario_id: int
     estrellas: float
+
+class ReseñaCreate(BaseModel):
+    mudanza_id: int
+    autor: str
+    calificado_id: int
+    estrellas: int
+    comentario: Optional[str] = "Sin comentarios"
+
+@app.post("/reseñas")
+def crear_reseña(res: ReseñaCreate):
+    from database import SessionLocal
+    db = SessionLocal()
+    try:
+        existente = db.query(ReseñaDB).filter(
+            ReseñaDB.mudanza_id == res.mudanza_id, 
+            ReseñaDB.autor == res.autor
+        ).first()
+        
+        if existente:
+            raise HTTPException(status_code=400, detail="Ya has calificado esta mudanza anteriormente.")
+            
+        nueva_reseña = ReseñaDB(
+            mudanza_id=res.mudanza_id,
+            autor=res.autor,
+            calificado_id=res.calificado_id,
+            estrellas=res.estrellas,
+            comentario=res.comentario or "Sin comentarios",
+            fecha=str(date.today())
+        )
+        db.add(nueva_reseña)
+        db.commit()
+        db.refresh(nueva_reseña)
+        return {"success": True, "reseña": nueva_reseña}
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        db.close()
+
+@app.get("/reseñas/usuario/{tipo}/{usuario_id}")
+def obtener_reseñas_usuario(tipo: str, usuario_id: int):
+    from database import SessionLocal
+    db = SessionLocal()
+    try:
+        autor_buscado = "Cliente" if tipo == "fletero" else "Fletero"
+        reseñas = db.query(ReseñaDB).filter(
+            ReseñaDB.calificado_id == usuario_id,
+            ReseñaDB.autor == autor_buscado
+        ).all()
+        return reseñas
+    finally:
+        db.close()
+
+@app.get("/reseñas/mudanza/{mudanza_id}")
+def obtener_reseñas_mudanza(mudanza_id: int):
+    from database import SessionLocal
+    db = SessionLocal()
+    try:
+        reseñas = db.query(ReseñaDB).filter(ReseñaDB.mudanza_id == mudanza_id).all()
+        return reseñas
+    finally:
+        db.close()
 
 @app.post("/crear-preferencia-pago")
 def crear_preferencia(item: ItemPago, request: Request):
