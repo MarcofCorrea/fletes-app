@@ -295,7 +295,6 @@
                     cargarMisMudanzas();
                 }
 
-                // Sincronización automática optimizada a 6 segundos con bloqueo anti-saturación
                 setInterval(async () => {
                     if (document.getElementById("vistaDashboardCliente").style.display !== "none") {
                         if (clienteCargandoDatos) return;

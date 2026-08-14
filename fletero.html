@@ -281,7 +281,6 @@
                 let arrayAprobadas = [];
 
                 for (const m of mudanzas) {
-                    // Ignorar de inmediato si la tarjeta fue descartada en cualquier sección
                     if (eliminadasSol.includes(m.id) || eliminadasTras.includes(m.id)) continue;
 
                     let nombreCliente = `Cliente ID: ${m.cliente_id}`;
@@ -691,7 +690,6 @@
             document.getElementById("pantallaDashboard").style.display="flex"; 
             cargarDatosDashboard(); 
 
-            // Sincronización automática a 6s con bloqueo anti-saturación
             setInterval(async () => {
                 if (document.getElementById("pantallaDashboard").style.display !== "none") {
                     if (fleteroCargandoDatos) return;
