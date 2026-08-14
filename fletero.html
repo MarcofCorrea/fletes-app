@@ -504,8 +504,9 @@
                 await fetch(`${API_URL}/ofertas/${ofertaId}/aceptar`, { method: "PUT", headers: { "Content-Type": "application/json" } });
                 
                 if (res.ok) {
+                    ultimoEstadoFleteroJson = ""; // Forzamos el redibujado instantáneo de la interfaz
                     alert("¡Mudanza aprobada con éxito en la base de datos!");
-                    cargarDatosDashboard();
+                    await cargarDatosDashboard();
                 } else {
                     alert("Error al sincronizar la aprobación en el servidor.");
                 }
