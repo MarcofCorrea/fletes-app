@@ -45,16 +45,16 @@
                             <input type="text" id="regBanco" placeholder="Nombre del banco" class="w-full p-2 border rounded-lg text-sm bg-white">
                         </div>
 
-                        <!-- DOCUMENTACIÓN -->
+                        <!-- DOCUMENTACIÓN CON SOPORTE DE CÁMARA MÓVIL -->
                         <div class="border-t pt-2 space-y-2 text-xs">
                             <label class="font-bold text-slate-700 block">Documentación requerida:</label>
-                            <label class="text-slate-600 block">DNI Frente (Fletero): <input type="file" id="regDniFrente" accept=".jpg,.png" class="w-full p-1 border rounded bg-white mt-1"></label>
-                            <label class="text-slate-600 block">DNI Dorso (Fletero): <input type="file" id="regDniDorso" accept=".jpg,.png" class="w-full p-1 border rounded bg-white mt-1"></label>
-                            <label class="text-slate-600 block">Cédula Verde/Azul (Frente): <input type="file" id="regCedulaFrente" accept=".jpg,.png" class="w-full p-1 border rounded bg-white mt-1"></label>
-                            <label class="text-slate-600 block">Cédula Verde/Azul (Dorso): <input type="file" id="regCedulaDorso" accept=".jpg,.png" class="w-full p-1 border rounded bg-white mt-1"></label>
-                            <label class="text-slate-600 block">Carnet de Conducir (Frente): <input type="file" id="regCarnetFrente" accept=".jpg,.png" class="w-full p-1 border rounded bg-white mt-1"></label>
-                            <label class="text-slate-600 block">Carnet de Conducir (Dorso): <input type="file" id="regCarnetDorso" accept=".jpg,.png" class="w-full p-1 border rounded bg-white mt-1"></label>
-                            <label class="text-slate-600 block">Seguro del Auto (PDF/Imagen): <input type="file" id="regSeguroAuto" accept=".pdf,.jpg,.png" class="w-full p-1 border rounded bg-white mt-1"></label>
+                            <label class="text-slate-600 block">DNI Frente (Fletero): <input type="file" id="regDniFrente" accept="image/*" capture="environment" class="w-full p-1 border rounded bg-white mt-1"></label>
+                            <label class="text-slate-600 block">DNI Dorso (Fletero): <input type="file" id="regDniDorso" accept="image/*" capture="environment" class="w-full p-1 border rounded bg-white mt-1"></label>
+                            <label class="text-slate-600 block">Cédula Verde/Azul (Frente): <input type="file" id="regCedulaFrente" accept="image/*" capture="environment" class="w-full p-1 border rounded bg-white mt-1"></label>
+                            <label class="text-slate-600 block">Cédula Verde/Azul (Dorso): <input type="file" id="regCedulaDorso" accept="image/*" capture="environment" class="w-full p-1 border rounded bg-white mt-1"></label>
+                            <label class="text-slate-600 block">Carnet de Conducir (Frente): <input type="file" id="regCarnetFrente" accept="image/*" capture="environment" class="w-full p-1 border rounded bg-white mt-1"></label>
+                            <label class="text-slate-600 block">Carnet de Conducir (Dorso): <input type="file" id="regCarnetDorso" accept="image/*" capture="environment" class="w-full p-1 border rounded bg-white mt-1"></label>
+                            <label class="text-slate-600 block">Seguro del Auto (Foto o PDF): <input type="file" id="regSeguroAuto" accept="image/*,.pdf" capture="environment" class="w-full p-1 border rounded bg-white mt-1"></label>
                         </div>
 
                         <button onclick="ejecutarRegistroFletero()" class="w-full bg-slate-900 text-white p-2 rounded-lg text-sm font-semibold">Registrarse como Fletero</button>
