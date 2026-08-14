@@ -1,0 +1,12 @@
+{
+  "background_color": "#ffffff",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "FletesApp",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "Fletes",
+  "start_url": "/",
+  "theme_color": "#ffffff",
+  "description": "Plataforma de mudanzas y fletes"
+}
